@@ -42,3 +42,26 @@ console.table(ventas) --> Me sirvió para ver los datos de una manera tabular y 
 * **Arreglo vacío (`[]`):** `totalVendido([])` y `totalUnidades([])` retornan `0`; `ventaMayor([])` retorna `null` para evitar acceder a índices inexistentes; `ticketPromedio([])` retorna `0` para evitar `0 / 0` (`NaN`).
 * **Arreglo de un solo elemento:** Funciona de forma directa retornando el subtotal o registro único sin errores de índice.
 * **Venta con `cantidad: 0` (`id: 8`):** Se excluye del conteo de ventas válidas en `ticketPromedio` para no bajar artificialmente el promedio.
+
+## Errores depurados
+
+### 1. Duplicación de ciudades por espacios/mayúsculas y error tipográfico en `nombreCiudad`
+* **Síntoma:** Al agrupar ventas por ciudad, registros como `"medellín "` y `"Medellín"`, o `"Bogotá "` y `"Bogotá"`, quedaban separados o lanzaban error al llamar `.toLowerCases()` (con `s` extra).
+* **Causa:** Falta de normalización previa con `.trim()` y `.toLowerCase()` antes de capitalizar la primera letra, además del typo `toLowerCases` en la primera versión de `nombreCiudad`.
+* **Solución:** Se implementó `nombreCiudad(texto)` aplicando `String(texto).trim().toLowerCase()`, validando cadena vacía (`if (!limpio) return ""`) y combinando `limpio.charAt(0).toUpperCase() + limpio.slice(1)` para consolidar correctamente las ciudades en `totalPorCiudadM`.
+
+### 2. `NaN` en el ticket promedio al evaluar un día sin ventas
+* **Síntoma:** Al calcular el ticket promedio sobre un conjunto sin ventas válidas (como un día sin ventas o un arreglo vacío `[]`), `0 / 0` producía `NaN` en el reporte.
+* **Causa:** Dividir la suma acumulada entre la cantidad de ventas válidas sin verificar previamente si el denominador (`validas.length` o `conteoValidas`) era igual a `0`.
+* **Solución:** Se añadió una guarda temprana (`if (validas.length === 0) return 0;`) en `ticketPromedioM` (y `if (conteoValidas === 0) return 0;` en `ticketPromedio`), garantizando que la simulación de un día sin ventas muestre `0 ventas · total $0 · ticket $0` sin `NaN`.
+
+## MiniReto 3: Métodos de arreglos, agrupaciones y verificación
+
+- **Migración a métodos declarativos:** Se implementaron `totalVendidoM`, `totalUnidadesM`, `ventaMayorM`, `ticketPromedioM`, `ventasPorCiudadM` y `ventasDelDiaM` usando `.reduce()` y `.filter()`.
+- **Agrupaciones y ranking:** Se añadieron `totalPorCiudadM` (con `nombreCiudad`), `unidadesPorProducto` y `topProductosPorValor(listaVentas, k = 3)`.
+- **Verificación (`src/verificar.js`):** Se contrastaron los resultados de las funciones con `for...of` frente a las de métodos de arreglos, además de probar arreglos vacíos y arreglos de un solo elemento.
+
+## MiniReto 4: Reporte final v0.1 (`src/reporte.js`)
+
+- **Formato local y 4 secciones:** Se implementó el reporte formateado con `.toLocaleString("es-CO")` mostrando resumen general (`$985.000`, `21` unidades, ticket promedio `$89.545`, venta mayor `#10` por `$168.000`), ventas por ciudad, unidades por producto y top 3 productos por valor.
+- **Simulación de día sin ventas:** Se probó el reporte con una fecha sin registros (`2026-09-10`), verificando la salida limpia `0 ventas · total $0 · ticket $0` sin `NaN` ni errores.
