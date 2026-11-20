@@ -140,7 +140,7 @@ function ventasDelDiaM(listaVentas, fechaBuscada) {
 console.log(ventasDelDiaM(ventas, "2026-09-01").length)
 
 function nombreCiudad(texto) {
-    const limpio = String(texto).trim().toLowerCases();
+    const limpio = String(texto).trim().toLowerCase();
     if (!limpio) return "";
     return limpio.charAt(0).toUpperCase() + limpio.slice(1);
 }
@@ -175,5 +175,9 @@ module.exports = {
     ventaMayorM,
     ticketPromedioM,
     ventasPorCiudadM,
-    ventasDelDiaM
+    ventasDelDiaM,
+    nombreCiudad,
+    totalPorCiudadM,
+    unidadesPorProducto,
+    topProductosPorValor
 };
