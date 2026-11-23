@@ -17,10 +17,14 @@ const {
     topProductosPorValor
 } = require("./analitica");
 
-function verificarIgualdad(etiqueta, esperado, obtenido) {
-    const coincide = JSON.stringify(esperado) === JSON.stringify(obtenido);
-    console.log(`${coincide ? "[OK]" : "[FALLO]"} ${etiqueta}`);
-    if (!coincide) {
+function verificarIgualdad(nombre, esperado, obtenido) {
+    const textoEsperado = JSON.stringify(esperado);
+    const textoObtenido = JSON.stringify(obtenido);
+
+    if (textoEsperado === textoObtenido) {
+        console.log("[OK]", nombre);
+    } else {
+        console.log("[FALLO]", nombre);
         console.log("  Esperado:", esperado);
         console.log("  Obtenido:", obtenido);
     }
