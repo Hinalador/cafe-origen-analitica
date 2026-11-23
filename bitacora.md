@@ -65,3 +65,24 @@ console.table(ventas) --> Me sirvió para ver los datos de una manera tabular y 
 
 - **Formato local y 4 secciones:** Se implementó el reporte formateado con `.toLocaleString("es-CO")` mostrando resumen general (`$985.000`, `21` unidades, ticket promedio `$89.545`, venta mayor `#10` por `$168.000`), ventas por ciudad, unidades por producto y top 3 productos por valor.
 - **Simulación de día sin ventas:** Se probó el reporte con una fecha sin registros (`2026-09-10`), verificando la salida limpia `0 ventas · total $0 · ticket $0` sin `NaN` ni errores.
+
+## MiniReto 5: Generador de datos, contador de operaciones y Big O
+
+### Metodología de trabajo asistido (sin entrega de código)
+- **Prompt inicial de aprendizaje:** *"Tengo el siguiente trabajo por hacer, ahora quiero que me guíes paso por paso como hacer cada cosa que me piden, te iré haciendo preguntas al respecto. Ahora dime, por donde empiezo, sin pasarme ninguna linea de código, quiero aprender"*.
+- **Enfoque:** A partir de este reto se trabajó de manera guiada paso a paso, escribiendo el código manualmente y resolviendo dudas conceptuales sobre arreglos, objetos, funciones, parámetros y ciclos, en lugar de generar el código automáticamente.
+
+### Avances completados en `src/generador.js`
+
+#### 1. Catálogos fijos (`productos` y `ciudades`)
+- **Prompts utilizados:** *"Bueno, empecemos por el primer bloque de src/generador.js. Que tipo de lista debo crear? y con que objetos?"* y *"Para este generador no puedo simplemente importar src/datos.js?"*.
+- **Cómo se construyó y qué se aprendió:**
+  - Se creó `productos` como un arreglo de objetos con propiedades en minúscula (`nombre` y `precio`), manteniendo cada artículo unido a su precio unitario real. Se dejó el peso integrado en el nombre (como en el Día 1) porque accesorios como *Prensa francesa* o *Molino manual* no llevan peso.
+  - Se creó `ciudades` como un arreglo simple de cadenas de texto limpias (`Medellín`, `Bogotá`, `Cali`, `Pereira`).
+  - **Decisión de diseño:** No se importó `src/datos.js` porque contiene un historial de muestra con datos sucios intencionales (espacios extra, minúsculas, una venta con cantidad `0` y productos repetidos que sesgarían el muestreo), mientras que el generador necesita catálogos limpios e independientes.
+
+#### 2. Función auxiliar `azar(min, max)`
+- **Prompts utilizados:** *"Ayudame a crear esta función paso por paso, no se bien como estructurarla. Soy muy begginer de javascript, necesito que me lleves de la mano..."* y *"o sea que la constante cantidadOpciones sería un (if(min === 1 && max === 5))?"*.
+- **Cómo se construyó y qué se aprendió:**
+  - Se comprendió la estructura básica de una función (`function`, nombre, parámetros, llaves y `return`) y por qué los parámetros permiten resolver cualquier rango con una operación directa sin depender de condicionales `if` fijos.
+  - Se implementó `azar(min, max)` en tres pasos intermedios claros: calcular el total de opciones inclusivas, multiplicar por `Math.random()` aplicando `Math.floor()` para obtener un entero desde `0`, y sumarle `min` en el `return` para cubrir exactamente el rango completo.
