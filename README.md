@@ -1,6 +1,14 @@
 # ☕ Café Origen — Analítica de Ventas (`v0.1`)
 
-Sistema de análisis y generación de reportes en **JavaScript (Node.js)** para procesar registros de ventas de **Café Origen**. El proyecto explora la manipulación de arreglos de objetos, limpieza y normalización de datos, cálculo de métricas comerciales (tanto con ciclos imperativos `for...of` como con métodos declarativos `reduce`, `filter`, `sort`, `slice`) y manejo seguro de casos borde.
+Sistema de análisis y generación de reportes en **JavaScript (Node.js)** para procesar registros de ventas de **Café Origen**. El proyecto explora la manipulación de arreglos de objetos, limpieza y normalización de datos, cálculo de métricas comerciales (tanto con ciclos imperativos `for...of` como con métodos declarativos `map`, `filter`, `reduce`, `sort`, `slice`) y manejo seguro de casos borde.
+
+### ❓ Preguntas de Negocio que Responde el Motor
+1. **¿Cuánto se vendió en total y cuántas unidades salieron?** (`totalVendido`, `unidadesVendidas`)
+2. **¿Cuál fue la transacción de mayor valor?** (`ventaMayor`)
+3. **¿Cuánto gasta en promedio un cliente en una compra efectiva?** (`ticketPromedio`)
+4. **¿Cuánto se vendió en una ciudad puntual o en todas las ciudades del país?** (`ventasPorCiudad`, `totalPorCiudad`)
+5. **¿Cuántas unidades se vendieron de cada artículo y cuáles son los 3 productos que más ingresos generan?** (`unidadesPorProducto`, `topProductosPorValor`)
+6. **¿Cómo se comportaron las ventas en una fecha específica (con o sin movimiento)?** (`ventasDelDia`)
 
 ---
 
@@ -50,16 +58,16 @@ El módulo exporta funciones auxiliares, métricas implementadas con ciclos trad
 | Operación | Versión `for...of` | Versión Métodos (`Array`) | Descripción |
 | :--- | :--- | :--- | :--- |
 | **Total vendido** | `totalVendido(lista)` | `totalVendidoM(lista)` | Suma el valor (`cantidad * precio`) de todas las ventas. |
-| **Total unidades** | `totalUnidades(lista)` | `totalUnidadesM(lista)` | Suma el total de unidades vendidas. |
+| **Unidades vendidas** | `unidadesVendidas(lista)` | `unidadesVendidasM(lista)` | Suma el total de unidades vendidas. |
 | **Venta mayor** | `ventaMayor(lista)` | `ventaMayorM(lista)` | Retorna el objeto de venta con mayor valor total (`null` si la lista está vacía). |
 | **Ticket promedio** | `ticketPromedio(lista)` | `ticketPromedioM(lista)` | Promedio en dinero considerando **solo ventas válidas** (`cantidad > 0`). Retorna `0` si no hay ventas válidas. |
 | **Ventas por ciudad** | `ventasPorCiudad(lista, ciudad)` | `ventasPorCiudadM(lista, ciudad)` | Calcula el monto total vendido en una ciudad específica (normalizada). |
 | **Ventas del día** | `ventasDelDia(lista, fecha)` | `ventasDelDiaM(lista, fecha)` | Filtra y retorna el arreglo de ventas correspondientes a una fecha `AAAA-MM-DD`. |
 
 ### 3. Agrupaciones y Rankings
-* **`totalPorCiudadM(listaVentas)`**: Agrupa y suma el valor total vendido por cada ciudad normalizada, retornando un objeto `{ Ciudad: montoTotal }`.
+* **`totalPorCiudad(listaVentas)`**: Agrupa y suma el valor total vendido por cada ciudad normalizada, retornando un objeto `{ Ciudad: montoTotal }`.
 * **`unidadesPorProducto(listaVentas)`**: Calcula cuántas unidades físicas se vendieron de cada producto `{ Producto: totalUnidades }`.
-* **`topProductosPorValor(listaVentas, k = 3)`**: Calcula el ingreso generado por cada producto y retorna los `k` productos con mayor facturación ordenados de mayor a menor (`[[producto, monto], ...]`).
+* **`topProductosPorValor(listaVentas, k = 3)`**: Calcula el ingreso generado por cada producto y retorna los `k` productos con mayor facturación ordenados de mayor a menor (`[[producto, monto], ...]`) sin modificar el arreglo original.
 
 ---
 

@@ -2,23 +2,23 @@ const ventas = require("./datos");
 const {
     valorVenta,
     totalVendidoM,
-    totalUnidadesM,
+    unidadesVendidasM,
     ventaMayorM,
     ticketPromedioM,
-    ventasDelDiaM,
-    totalPorCiudadM,
+    ventasDelDia,
+    totalPorCiudad,
     unidadesPorProducto,
     topProductosPorValor
 } = require("./analitica");
 
 function formatoCOP(valor) {
-    return `$${Math.round(valor).toLocaleString("es-CO")}`;
+    return "$" + Math.round(valor).toLocaleString("es-CO");
 }
 
 function imprimirReporte(titulo, listaVentas) {
     const validas = listaVentas.filter((venta) => venta.cantidad > 0);
     const total = totalVendidoM(listaVentas);
-    const unidades = totalUnidadesM(listaVentas);
+    const unidades = unidadesVendidasM(listaVentas);
     const ticket = ticketPromedioM(listaVentas);
     const mayor = ventaMayorM(listaVentas);
 
@@ -28,14 +28,14 @@ function imprimirReporte(titulo, listaVentas) {
 
     // 1. Resumen general
     console.log("\n1. Resumen general");
-    console.log(`- Registros totales: ${listaVentas.length}`);
-    console.log(`- Ventas válidas (cantidad > 0): ${validas.length}`);
-    console.log(`- Total vendido: ${formatoCOP(total)}`);
-    console.log(`- Total unidades: ${unidades}`);
-    console.log(`- Ticket promedio: ${formatoCOP(ticket)}`);
+    console.log("- Registros totales: " + listaVentas.length);
+    console.log("- Ventas válidas (cantidad > 0): " + validas.length);
+    console.log("- Total vendido: " + formatoCOP(total));
+    console.log("- Unidades vendidas: " + unidades);
+    console.log("- Ticket promedio: " + formatoCOP(ticket));
     if (mayor) {
         console.log(
-            `- Venta mayor: #${mayor.id} (${mayor.producto} · ${mayor.cantidad} und · ${formatoCOP(valorVenta(mayor))})`
+            "- Venta mayor: #" + mayor.id + " (" + mayor.producto + " · " + mayor.cantidad + " und · " + formatoCOP(valorVenta(mayor)) + ")"
         );
     } else {
         console.log("- Venta mayor: ninguna");
@@ -43,13 +43,15 @@ function imprimirReporte(titulo, listaVentas) {
 
     // 2. Ventas por ciudad
     console.log("\n2. Ventas por ciudad");
-    const porCiudad = totalPorCiudadM(listaVentas);
+    const porCiudad = totalPorCiudad(listaVentas);
     const ciudades = Object.entries(porCiudad);
     if (ciudades.length === 0) {
         console.log("- Sin ventas por ciudad");
     } else {
-        for (const [ciudad, monto] of ciudades) {
-            console.log(`- ${ciudad}: ${formatoCOP(monto)}`);
+        for (const par of ciudades) {
+            const ciudad = par[0];
+            const monto = par[1];
+            console.log("- " + ciudad + ": " + formatoCOP(monto));
         }
     }
 
@@ -60,9 +62,14 @@ function imprimirReporte(titulo, listaVentas) {
     if (productos.length === 0) {
         console.log("- Sin unidades vendidas");
     } else {
-        for (const [producto, cant] of productos) {
-            const etiquetaUnidad = cant === 1 ? "unidad" : "unidades";
-            console.log(`- ${producto}: ${cant} ${etiquetaUnidad}`);
+        for (const par of productos) {
+            const producto = par[0];
+            const cant = par[1];
+            let etiquetaUnidad = "unidades";
+            if (cant === 1) {
+                etiquetaUnidad = "unidad";
+            }
+            console.log("- " + producto + ": " + cant + " " + etiquetaUnidad);
         }
     }
 
@@ -72,21 +79,27 @@ function imprimirReporte(titulo, listaVentas) {
     if (top3.length === 0) {
         console.log("- Sin productos en ranking");
     } else {
-        top3.forEach(([producto, monto], idx) => {
-            console.log(`${idx + 1}. ${producto}: ${formatoCOP(monto)}`);
-        });
+        for (let i = 0; i < top3.length; i++) {
+            const producto = top3[i][0];
+            const monto = top3[i][1];
+            console.log((i + 1) + ". " + producto + ": " + formatoCOP(monto));
+        }
     }
 
     console.log("\n----------------------------------------");
     console.log(
-        `Resumen corto: ${validas.length} ventas · total ${formatoCOP(total)} · ticket ${formatoCOP(ticket)}`
+        "Resumen corto: " + validas.length + " ventas · total " + formatoCOP(total) + " · ticket " + formatoCOP(ticket)
     );
     console.log("========================================\n");
 }
 
-// Reporte general de Café Origen
+// 1. Reporte general de Café Origen
 imprimirReporte("CAFÉ ORIGEN — REPORTE ANALÍTICO v0.1", ventas);
 
-// Simulación de un día sin ventas (fecha sin registros o arreglo vacío)
-const diaSinVentas = ventasDelDiaM(ventas, "2026-09-10");
+// 2. Resumen de un día con ventas
+const diaConVentas = ventasDelDia(ventas, "2026-09-01");
+imprimirReporte("REPORTE DEL DÍA CON VENTAS (2026-09-01)", diaConVentas);
+
+// 3. Resumen de un día sin ventas
+const diaSinVentas = ventasDelDia(ventas, "2026-09-10");
 imprimirReporte("SIMULACIÓN DÍA SIN VENTAS (2026-09-10)", diaSinVentas);

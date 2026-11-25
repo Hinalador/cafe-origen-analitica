@@ -14,12 +14,16 @@ function totalVendido(listaVentas) {
     return total;
 }
 
-function totalUnidades(listaVentas) {
+function unidadesVendidas(listaVentas) {
     let unidades = 0;
     for (const venta of listaVentas) {
         unidades += venta.cantidad;
     }
     return unidades;
+}
+
+function totalUnidades(listaVentas) {
+    return unidadesVendidas(listaVentas);
 }
 
 function ventaMayor(listaVentas) {
@@ -78,23 +82,38 @@ function ventasDelDia(listaVentas, fechaBuscada) {
 }
 
 function totalVendidoM(listaVentas) {
-    return listaVentas.reduce((acc, venta) => acc + valorVenta(venta), 0);
+    return listaVentas
+        .map((venta) => valorVenta(venta))
+        .reduce((acc, subtotal) => acc + subtotal, 0);
 }
 
-function totalUnidadesM(listaVentas) {
+function unidadesVendidasM(listaVentas) {
     return listaVentas.reduce((acc, venta) => acc + venta.cantidad, 0);
 }
 
+function totalUnidadesM(listaVentas) {
+    return unidadesVendidasM(listaVentas);
+}
+
 function ventaMayorM(listaVentas) {
-    if (listaVentas.length === 0) return null;
-    return listaVentas.reduce((mayor, venta) =>
-        valorVenta(venta) > valorVenta(mayor) ? venta : mayor
-    );
+    if (listaVentas.length === 0) {
+        return null;
+    }
+
+    return listaVentas.reduce((mayor, venta) => {
+        if (valorVenta(venta) > valorVenta(mayor)) {
+            return venta;
+        } else {
+            return mayor;
+        }
+    });
 }
 
 function ticketPromedioM(listaVentas) {
     const validas = listaVentas.filter((venta) => venta.cantidad > 0);
-    if (validas.length === 0) return 0;
+    if (validas.length === 0) {
+        return 0;
+    }
     return totalVendidoM(validas) / validas.length;
 }
 
@@ -102,7 +121,8 @@ function ventasPorCiudadM(listaVentas, ciudadBuscada) {
     const objetivo = normalizar(ciudadBuscada);
     return listaVentas
         .filter((venta) => normalizar(venta.ciudad) === objetivo)
-        .reduce((acc, venta) => acc + valorVenta(venta), 0);
+        .map((venta) => valorVenta(venta))
+        .reduce((acc, subtotal) => acc + subtotal, 0);
 }
 
 function ventasDelDiaM(listaVentas, fechaBuscada) {
@@ -111,53 +131,101 @@ function ventasDelDiaM(listaVentas, fechaBuscada) {
 
 function nombreCiudad(texto) {
     const limpio = String(texto).trim().toLowerCase();
-    if (!limpio) return "";
+    if (!limpio) {
+        return "";
+    }
     return limpio.charAt(0).toUpperCase() + limpio.slice(1);
 }
 
-function totalPorCiudadM(listaVentas) {
+function totalPorCiudad(listaVentas) {
     return listaVentas.reduce((totales, venta) => {
         const ciudad = nombreCiudad(venta.ciudad);
-        totales[ciudad] = (totales[ciudad] || 0) + valorVenta(venta);
+        if (!totales[ciudad]) {
+            totales[ciudad] = 0;
+        }
+        totales[ciudad] += valorVenta(venta);
         return totales;
     }, {});
 }
 
+function totalPorCiudadM(listaVentas) {
+    return totalPorCiudad(listaVentas);
+}
+
 function unidadesPorProducto(listaVentas) {
     return listaVentas.reduce((acc, venta) => {
-        acc[venta.producto] = (acc[venta.producto] || 0) + venta.cantidad;
+        if (!acc[venta.producto]) {
+            acc[venta.producto] = 0;
+        }
+        acc[venta.producto] += venta.cantidad;
         return acc;
     }, {});
 }
 
 function topProductosPorValor(listaVentas, k = 3) {
     const totalesPorProducto = listaVentas.reduce((acc, venta) => {
-        acc[venta.producto] = (acc[venta.producto] || 0) + valorVenta(venta);
+        if (!acc[venta.producto]) {
+            acc[venta.producto] = 0;
+        }
+        acc[venta.producto] += valorVenta(venta);
         return acc;
     }, {});
 
-    return Object.entries(totalesPorProducto)
+    const pares = Object.entries(totalesPorProducto);
+    const copiaPares = [...pares];
+
+    return copiaPares
         .sort((a, b) => b[1] - a[1])
         .slice(0, k);
+}
+
+function totalVendidoOp(listaVentas, contador) {
+    let total = 0;
+    for (const venta of listaVentas) {
+        contador.operaciones++;
+        total += valorVenta(venta);
+    }
+    return total;
+}
+
+function ventaMayorOp(listaVentas, contador) {
+    if (listaVentas.length === 0) {
+        return null;
+    }
+
+    let mayor = listaVentas[0]
+    for (const venta of listaVentas) {
+        contador.operaciones++
+
+        if (valorVenta(venta) > valorVenta(mayor)) {
+            mayor = venta
+        }
+    }
+    return mayor;
 }
 
 module.exports = {
     valorVenta,
     normalizar,
     totalVendido,
+    unidadesVendidas,
     totalUnidades,
     ventaMayor,
     ticketPromedio,
     ventasPorCiudad,
     ventasDelDia,
     totalVendidoM,
+    unidadesVendidasM,
     totalUnidadesM,
     ventaMayorM,
     ticketPromedioM,
     ventasPorCiudadM,
     ventasDelDiaM,
     nombreCiudad,
+    totalPorCiudad,
     totalPorCiudadM,
     unidadesPorProducto,
-    topProductosPorValor
+    totalVendidoOp,
+    topProductosPorValor,
+    ventaMayorOp
 };

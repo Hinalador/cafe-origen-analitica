@@ -32,6 +32,35 @@ function azar(min, max) {
 function generarVentas(n) {
     const ventas = []
     const totalClientes = Math.max(1, Math.floor(n / 3))
-    for (let i = 1; i <= n;) {
+    for (let i = 1; i <= n; i++) {
+        const indiceProductos = azar(0, productos.length - 1);
+        const productoElegido = productos[indiceProductos];
+
+        const indiceCiudad = azar(0, ciudades.length - 1);
+        const ciudadElegida = ciudades[indiceCiudad]
+
+        const cantidad = azar(1, 5);
+        const numeroCliente = azar(1, totalClientes);
+        const cliente = "C" + numeroCliente;
+        const dia = azar(1, 30);
+        let fecha = "";
+        if (dia < 10) {
+
+            fecha = ("2026-09-0" + dia);
+
+        } else {
+
+            fecha = ("2026-09-" + dia);
+
+        }
+
+        const venta = { id: i, fecha: fecha, cliente: cliente, producto: productoElegido.nombre, ciudad: ciudadElegida, cantidad: cantidad, precio: productoElegido.precio }
+
+        ventas.push(venta)
     }
+    return (ventas)
 }
+
+console.table(generarVentas(10))
+
+module.exports = generarVentas;
