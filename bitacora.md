@@ -227,3 +227,25 @@ console.table(ventas) --> Me sirvió para ver los datos de una manera tabular y 
 - **Cómo se va construyendo y qué se aprendió:**
   - **Validación de arreglo vacío e inicialización del máximo:** Tomando como referencia visual `ventaMayor`, se estructuró el encabezado `function ventaMayorOp(listaVentas, contador)`, aclarando que en JavaScript ningún `if ()` puede quedar con paréntesis vacíos y por qué es importante validar `listaVentas.length === 0` antes de leer `listaVentas[0]` (para retornar `null` en lugar de `undefined`).
   - **Ubicación del contador e invocación de funciones al comparar:** Se ubicó `contador.operaciones++` dentro del `for...of` antes del condicional `if`, ya que la comparación se ejecuta en cada elemento recorrido aunque no supere al máximo actual. Además, se corrigió `valorVenta > valorVenta.mayor` invocando `valorVenta(venta) > valorVenta(mayor)`, exportando `ventaMayorOp` en `module.exports` y comprobando que retorna el registro `id: 10` con `12` operaciones sobre la muestra base.
+
+#### 3. `totalPorCiudadOp(listaVentas, contador)`
+- **Prompts utilizados:**
+  - *"quiero que me expliques como si fuese la primera vez que hago este tipo de funciones"*
+  - *"Explicame paso por paso que hacer"*
+  - *"no entiendo lo de el if"* → *"Si, me quedó un poco mas claro, lo que pasa es que empezaste a hablar de alcancía y no entendí muy bien. Revisa mi condicional ahora."*
+- **Cómo se va construyendo y qué se aprendió:**
+  - **Estructura inicial y objeto diccionario (`totales`):** Se abordó el agrupamiento desde cero usando un objeto vacío (`const totales = {}`) y un ciclo `for...of`, corrigiendo el código que había quedado fuera de la función y dejando bien estructurado `function totalPorCiudadOp(listaVentas, contador)`.
+  - **Conteo y normalización en cada vuelta:** Dentro del ciclo se añadió primero `contador.operaciones++` para registrar cada elemento visitado y luego `const ciudad = nombreCiudad(venta.ciudad)` para unificar nombres como `"medellín "` y `"Medellín"` bajo una misma propiedad limpia.
+  - **Inicialización explícita de propiedades dinámicas (`=== undefined`):** Dejando de lado analogías confusas y explicándolo directamente desde el comportamiento de JavaScript, se comprendió que si una propiedad aún no existe en `totales`, su valor es `undefined` (y sumarle un número produciría `NaN`). Por eso se implementó `if (totales[ciudad] === undefined) { totales[ciudad] = 0; }` de forma explícita y legible en lugar del atajo con `!`.
+  - **Acumulación, retorno y exportación:** Justo después del condicional se acumuló el subtotal con `totales[ciudad] += valorVenta(venta)`, se retornó `totales` fuera del ciclo y se exportó `totalPorCiudadOp` en `module.exports`, comprobando que devuelve los montos exactos de las 4 ciudades con `12` operaciones.
+
+#### 4. `primeraVentaOp(listaVentas, contador)`
+- **Prompts utilizados:** *"Listo, que sigue"* → *"Algo así?"*.
+- **Cómo se construyó y qué se aprendió:**
+  - Se implementó una función sin ciclos que incrementa `contador.operaciones++` una única vez, valida arreglo vacío (`if (listaVentas.length === 0) return null`), retorna directamente `listaVentas[0]` y se exporta en `module.exports`, sirviendo como referencia de complejidad constante `O(1)` frente a las tres funciones con recorrido completo.
+
+### Predicciones antes de medir (si `n` se multiplica por `10`)
+- **Prompts utilizados:** *"No se, dame pistas para responder estas predicciones"*.
+- **Razonamiento y predicción propia previa a ejecutar `src/medir.js`:**
+  1. **`primeraVentaOp`:** Se mantendrá exactamente igual (`1` operación sin importar el tamaño de `n`), ya que no hay ningún ciclo que recorrer en la función: únicamente entra, le suma `1` al contador y lee la primera posición.
+  2. **`totalVendidoOp`, `ventaMayorOp` y `totalPorCiudadOp`:** Sus operaciones también se multiplicarán por `10` (por ejemplo, de `100` pasarán a `1.000` operaciones), porque así como con `12` datos el ciclo recorre `12` veces, al incrementar las ventas el ciclo recorrerá el total de registros que entren (`1.000`, `30.000` o cualquier cantidad `n`).

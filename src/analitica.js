@@ -204,6 +204,29 @@ function ventaMayorOp(listaVentas, contador) {
     return mayor;
 }
 
+function totalPorCiudadOp(listaVentas, contador) {
+    const totales = {};
+    for (const venta of listaVentas) {
+        contador.operaciones++;
+        const ciudad = nombreCiudad(venta.ciudad)
+
+        if (totales[ciudad] === undefined) {
+            totales[ciudad] = 0;
+        }
+
+        totales[ciudad] += valorVenta(venta)
+    }
+    return (totales)
+}
+
+function primeraVentaOp(listaVentas, contador) {
+    contador.operaciones++
+    if (listaVentas.length === 0) {
+        return (null)
+    }
+    return (listaVentas[0])
+}
+
 module.exports = {
     valorVenta,
     normalizar,
@@ -227,5 +250,7 @@ module.exports = {
     unidadesPorProducto,
     totalVendidoOp,
     topProductosPorValor,
-    ventaMayorOp
+    ventaMayorOp,
+    totalPorCiudadOp,
+    primeraVentaOp
 };
