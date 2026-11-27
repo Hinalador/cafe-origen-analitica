@@ -9,7 +9,9 @@ const {
     totalCiudadCadena,
     totalCiudadUnaPasada,
     clientesRecurrentesSet,
-    clientesRecurrentesMap
+    clientesRecurrentesMap,
+    mejorSemanaBruta,
+    mejorSemana
 } = require("./analitica");
 
 // --- MiniReto 5: Conteo de operaciones ---
@@ -108,5 +110,42 @@ for (const n of tamanosReto9) {
     clientesRecurrentesMap(muestra);
     console.timeEnd("Versión Map O(n) [n = " + n + "]");
 }
+
+// --- MiniReto 11: Fuerza bruta vs Ventana deslizante (100.000 días al azar) ---
+console.log("\n=== MiniReto 11: mejorSemanaBruta vs mejorSemana (100.000 días) ===");
+const diasAzar = [];
+for (let i = 0; i < 100000; i++) {
+    const ventaDelDia = Math.floor(Math.random() * 800) + 200;
+    diasAzar.push(ventaDelDia);
+}
+
+console.time("mejorSemanaBruta (n = 100000, k = 7)");
+const rachaBruta7 = mejorSemanaBruta(diasAzar, 7);
+console.timeEnd("mejorSemanaBruta (n = 100000, k = 7)");
+
+console.time("mejorSemana ventana (n = 100000, k = 7)");
+const rachaVentana7 = mejorSemana(diasAzar, 7);
+console.timeEnd("mejorSemana ventana (n = 100000, k = 7)");
+
+if (rachaBruta7.diaInicio === rachaVentana7.diaInicio && rachaBruta7.total === rachaVentana7.total) {
+    console.log("[OK] Coinciden en 100.000 días (k=7):", rachaVentana7);
+} else {
+    console.log("[DIFERENTE]", rachaBruta7, rachaVentana7);
+}
+
+console.time("mejorSemanaBruta (n = 100000, k = 90)");
+const rachaBruta90 = mejorSemanaBruta(diasAzar, 90);
+console.timeEnd("mejorSemanaBruta (n = 100000, k = 90)");
+
+console.time("mejorSemana ventana (n = 100000, k = 90)");
+const rachaVentana90 = mejorSemana(diasAzar, 90);
+console.timeEnd("mejorSemana ventana (n = 100000, k = 90)");
+
+if (rachaBruta90.diaInicio === rachaVentana90.diaInicio && rachaBruta90.total === rachaVentana90.total) {
+    console.log("[OK] Coinciden en 100.000 días (k=90):", rachaVentana90);
+} else {
+    console.log("[DIFERENTE]", rachaBruta90, rachaVentana90);
+}
+
 
 

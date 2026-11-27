@@ -422,6 +422,101 @@ function primerClienteUnico(ventas) {
     return null;
 }
 
+const ventasDiarias = [
+    320, 410, 280, 390, 510, 620, 700, 300, 290, 450,
+    480, 530, 610, 680, 350, 330, 420, 470, 560, 640,
+    710, 380, 360, 440, 500, 590, 650, 720, 400, 370
+];
+
+function mejorSemanaBruta(dias, k) {
+    if (k <= 0 || dias.length < k) {
+        return null;
+    }
+
+    let mayorTotal = 0;
+    let mejorIndice = 0;
+
+    for (let inicio = 0; inicio <= dias.length - k; inicio++) {
+        let sumaBloque = 0;
+
+        for (let j = inicio; j < inicio + k; j++) {
+            sumaBloque += dias[j];
+        }
+
+        if (inicio === 0 || sumaBloque > mayorTotal) {
+            mayorTotal = sumaBloque;
+            mejorIndice = inicio;
+        }
+    }
+
+    return {
+        diaInicio: mejorIndice + 1,
+        total: mayorTotal
+    };
+}
+
+function mejorSemana(dias, k) {
+    if (k <= 0 || dias.length < k) {
+        return null;
+    }
+
+    let sumaVentana = 0;
+    for (let i = 0; i < k; i++) {
+        sumaVentana += dias[i];
+    }
+
+    let mayorTotal = sumaVentana;
+    let mejorIndice = 0;
+
+    for (let i = k; i < dias.length; i++) {
+        const diaQueEntra = dias[i];
+        const diaQueSale = dias[i - k];
+        sumaVentana = sumaVentana + diaQueEntra - diaQueSale;
+
+        const indiceActual = i - k + 1;
+        if (sumaVentana > mayorTotal) {
+            mayorTotal = sumaVentana;
+            mejorIndice = indiceActual;
+        }
+    }
+
+    return {
+        diaInicio: mejorIndice + 1,
+        total: mayorTotal
+    };
+}
+
+function parMasCercano(precios, presupuesto) {
+    if (precios.length < 2) {
+        return null;
+    }
+
+    const ordenados = [...precios].sort(function (a, b) {
+        return a.precio - b.precio;
+    });
+
+    let izq = 0;
+    let der = ordenados.length - 1;
+    let mejorSuma = 0;
+    let mejorPar = null;
+
+    while (izq < der) {
+        const sumaActual = ordenados[izq].precio + ordenados[der].precio;
+
+        if (sumaActual > presupuesto) {
+            der--;
+        } else {
+            if (mejorPar === null || sumaActual > mejorSuma) {
+                mejorSuma = sumaActual;
+                mejorPar = [ordenados[izq], ordenados[der]];
+            }
+            izq++;
+        }
+    }
+
+    return mejorPar;
+}
+
 module.exports = {
     valorVenta,
     normalizar,
@@ -457,5 +552,9 @@ module.exports = {
     comboRegaloBruto,
     comboRegalo,
     productoEstrellaPorCiudad,
-    primerClienteUnico
+    primerClienteUnico,
+    ventasDiarias,
+    mejorSemanaBruta,
+    mejorSemana,
+    parMasCercano
 };

@@ -23,7 +23,11 @@ const {
     comboRegaloBruto,
     comboRegalo,
     productoEstrellaPorCiudad,
-    primerClienteUnico
+    primerClienteUnico,
+    ventasDiarias,
+    mejorSemanaBruta,
+    mejorSemana,
+    parMasCercano
 } = require("./analitica");
 
 function verificarIgualdad(nombre, esperado, obtenido) {
@@ -95,4 +99,19 @@ console.log("Combo sugerido $61.000:", comboRegalo(catalogo, 61000));
 console.log("Producto estrella por ciudad (Día 1):", productoEstrellaPorCiudad(ventas));
 verificarIgualdad("primerClienteUnico (Día 1 === C04)", primerClienteUnico(ventas), "C04");
 verificarIgualdad("primerClienteUnico arreglo vacío []", primerClienteUnico([]), null);
+
+console.log("\n--- MiniReto 11: Mejor semana (ventana deslizante) y presupuesto cercano (dos punteros) ---");
+verificarIgualdad(
+    "mejorSemana septiembre (Bruta vs Ventana, k=7)",
+    mejorSemanaBruta(ventasDiarias, 7),
+    mejorSemana(ventasDiarias, 7)
+);
+console.log("Mejor semana de septiembre (miles de pesos):", mejorSemana(ventasDiarias, 7));
+verificarIgualdad("mejorSemana caso borde (k > dias.length)", mejorSemana(ventasDiarias, 40), null);
+
+console.log("parMasCercano $100.000:", parMasCercano(catalogo, 100000));
+console.log("parMasCercano $140.000:", parMasCercano(catalogo, 140000));
+verificarIgualdad("parMasCercano $40.000 (sin solución)", parMasCercano(catalogo, 40000), null);
+verificarIgualdad("catalogo no fue mutado por sort()", catalogo[0].producto, "Origen Nariño 250 g");
+
 

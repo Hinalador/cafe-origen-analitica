@@ -477,3 +477,58 @@ Tomando como base la medición estable de `n = 16.000` (`864,605 ms ≈ 0,865 s`
 | `comboRegalo(catalogo, valor)` | **`O(n)`** | **`O(n)`** | Un único recorrido sobre el catálogo con consultas e inserciones `O(1)` en el `Map` de precios vistos (guarda hasta `n` entradas). |
 | `productoEstrellaPorCiudad(ventas)` | **`O(n)`** | **`O(c · p)` ≤ `O(n)`** | Un recorrido de `n` ventas actualizando mapas en `O(1)`, seguido de la revisión de los pares `(ciudad, producto)` únicos registrados (como máximo `n`). |
 | `primerClienteUnico(ventas)` | **`O(n)`** | **`O(n)`** | Dos recorridos secuenciales independientes (`O(2n) = O(n)`) y un `Map` que almacena hasta `n` clientes únicos. |
+
+## MiniReto 11: La mejor racha y el presupuesto exacto (Ventana deslizante y Dos punteros)
+
+### 1. Mejor semana de septiembre (`mejorSemanaBruta` vs `mejorSemana`) y dibujo de las 3 primeras ventanas
+- Se implementó `mejorSemanaBruta(dias, k)` sumando desde cero cada bloque de `k` días consecutivos, y `mejorSemana(dias, k)` con **ventana deslizante de tamaño fijo**: calcula una sola vez los primeros `k` días y en cada paso suma `dias[i]` (el día que entra por la derecha) y resta `dias[i - k]` (el día que sale por la izquierda), retornando `null` si `k <= 0` o `dias.length < k`.
+- **Dibujo de las tres primeras posiciones de la ventana (`k = 7`) en `ventasDiarias` (miles de COP):**
+
+```text
+Arreglo inicial (primeros 9 días): [ 320, 410, 280, 390, 510, 620, 700, 300, 290, ... ]
+
+Ventana 1 (índices 0..6, días 1 al 7):
+[ 320 | 410 | 280 | 390 | 510 | 620 | 700 ]  300   290
+  └────────────────── suma inicial = 3.230 ──────────────────┘
+
+Ventana 2 (índices 1..7, días 2 al 8) -> sale 320, entra 300:
+  320 [ 410 | 280 | 390 | 510 | 620 | 700 | 300 ]  290
+        └──────── 3.230 + 300 - 320 = 3.210 ────────┘
+
+Ventana 3 (índices 2..8, días 3 al 9) -> sale 410, entra 290:
+  320   410 [ 280 | 390 | 510 | 620 | 700 | 300 | 290 ]
+              └──────── 3.210 + 290 - 410 = 3.090 ────────┘
+```
+
+- **Resultado en septiembre (`k = 7`):** Ambas funciones coinciden (`[OK]`) e identifican que la **mejor semana inicia el día `24` de septiembre** (días `24` al `30`: `440 + 500 + 590 + 650 + 720 + 400 + 370`), con un total de **`3.670` miles de pesos (`$3.670.000`)**.
+- **Comparación con `100.000` días generados al azar (`src/medir.js`):**
+  - Con `k = 7`: ambas coinciden exactamente (`[OK]`); fuerza bruta tardó `1,909 ms` y ventana deslizante `1,313 ms`.
+  - Con `k = 90` (trimestre móvil): ambas coinciden exactamente (`[OK]`); fuerza bruta subió a `6,100 ms` por recalcular `90` sumas en cada posición, mientras que la ventana deslizante bajó a **`0,161 ms`** (`~38×` más rápida) porque siempre hace solo una suma y una resta por paso sin importar el valor de `k`.
+
+### 2. Presupuesto corporativo con dos punteros (`parMasCercano`) y traza para `$100.000`
+- Se copió el catálogo con `[...precios]` para no mutar el arreglo original y se ordenó de menor a mayor precio:
+  - `[0]` Filtros (`18.000`), `[1]` Nariño 250 g (`26.000`), `[2]` Taza (`35.000`), `[3]` Huila 500 g (`42.000`), `[4]` Sierra 500 g (`45.000`), `[5]` Huila 1 kg (`79.000`), `[6]` Prensa francesa (`95.000`), `[7]` Molino manual (`120.000`).
+- **Resultados de prueba:**
+  - Presupuesto `$100.000` → `Filtros de papel x100 ($18.000)` + `Origen Huila 1 kg ($79.000)` = **`$97.000`**.
+  - Presupuesto `$140.000` → `Origen Sierra 500 g ($45.000)` + `Prensa francesa ($95.000)` = **`$140.000`** (exacto).
+  - Presupuesto `$40.000` → **`null`** (sin solución: los dos productos más económicos suman `18.000 + 26.000 = $44.000`, superando el presupuesto).
+
+#### Traza de punteros para `parMasCercano(catalogo, 100000)`
+
+| Paso | `izq` (producto y precio) | `der` (producto y precio) | `sumaActual` | ¿`> 100.000`? | `mejorSuma` / `mejorPar` | Movimiento y razón |
+| :---: | :--- | :--- | ---: | :---: | :--- | :--- |
+| `1` | `0`: Filtros (`18.000`) | `7`: Molino (`120.000`) | `138.000` | Sí | `null` | **`der--` (`→ 6`)**: la suma se pasa del presupuesto; como el arreglo está ordenado, la única forma de bajar la suma es reducir el precio mayor. |
+| `2` | `0`: Filtros (`18.000`) | `6`: Prensa (`95.000`) | `113.000` | Sí | `null` | **`der--` (`→ 5`)**: aún supera `100.000`, se descarta `Prensa` hacia la izquierda. |
+| `3` | `0`: Filtros (`18.000`) | `5`: Huila 1 kg (`79.000`) | `97.000` | No (`<=`) | **`97.000` (`Filtros + Huila 1 kg`)** | **`izq++` (`→ 1`)**: suma válida y nuevo máximo; se avanza el puntero izquierdo buscando una suma mayor que se acerque más a `100.000`. |
+| `4` | `1`: Nariño (`26.000`) | `5`: Huila 1 kg (`79.000`) | `105.000` | Sí | `97.000` (`Filtros + Huila 1 kg`) | **`der--` (`→ 4`)**: `105.000` excede el tope, así que hay que disminuir el extremo derecho. |
+| `5` | `1`: Nariño (`26.000`) | `4`: Sierra (`45.000`) | `71.000` | No (`<=`) | `97.000` *(no mejora)* | **`izq++` (`→ 2`)**: cabe en el presupuesto pero `71.000 < 97.000`; se sube `izq` para intentar aumentar la suma. |
+| `6` | `2`: Taza (`35.000`) | `4`: Sierra (`45.000`) | `80.000` | No (`<=`) | `97.000` *(no mejora)* | **`izq++` (`→ 3`)**: `80.000 < 97.000`; se vuelve a avanzar `izq` buscando mayor valor. |
+| `7` | `3`: Huila 500 g (`42.000`) | `4`: Sierra (`45.000`) | `87.000` | No (`<=`) | `97.000` *(no mejora)* | **`izq++` (`→ 4`)**: `87.000 < 97.000`; al subir `izq` queda `izq === der` (`4 === 4`), termina el `while` y retorna `[Filtros, Huila 1 kg]`. |
+
+### 3. Clasificación de complejidad de las funciones del MiniReto 11
+
+| Función | Complejidad temporal | Complejidad espacial | Justificación |
+| :--- | :---: | :---: | :--- |
+| `mejorSemanaBruta(dias, k)` | `O(n · k)` | `O(1)` | Por cada una de las `n - k + 1` posiciones iniciales recorre internamente `k` elementos sumando desde cero. |
+| `mejorSemana(dias, k)` | **`O(n)`** | **`O(1)`** | Suma los primeros `k` días una vez y luego avanza desde `k` hasta `n - 1` haciendo solo `1` suma y `1` resta por día (`k + (n - k) = n` pasos totales) y usando variables simples. |
+| `parMasCercano(precios, presupuesto)` | **`O(n log n)`** | **`O(n)`** | Copiar y ordenar `[...precios].sort(...)` cuesta `O(n log n)` y el ciclo `while (izq < der)` recorre el arreglo a lo sumo una vez (`O(n)`); al sumar `O(n log n) + O(n)` domina **`O(n log n)`**. En memoria usa `O(n)` por la copia ordenada (el recorrido de punteros por sí solo es `O(1)`). |
