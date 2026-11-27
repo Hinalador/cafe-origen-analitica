@@ -249,3 +249,30 @@ console.table(ventas) --> Me sirvió para ver los datos de una manera tabular y 
 - **Razonamiento y predicción propia previa a ejecutar `src/medir.js`:**
   1. **`primeraVentaOp`:** Se mantendrá exactamente igual (`1` operación sin importar el tamaño de `n`), ya que no hay ningún ciclo que recorrer en la función: únicamente entra, le suma `1` al contador y lee la primera posición.
   2. **`totalVendidoOp`, `ventaMayorOp` y `totalPorCiudadOp`:** Sus operaciones también se multiplicarán por `10` (por ejemplo, de `100` pasarán a `1.000` operaciones), porque así como con `12` datos el ciclo recorre `12` veces, al incrementar las ventas el ciclo recorrerá el total de registros que entren (`1.000`, `30.000` o cualquier cantidad `n`).
+
+### Construcción y ejecución de `src/medir.js`
+- **Cómo se construyó y qué se aprendió:**
+  - **Ajuste previo en `src/generador.js`:** Se comentó con `//` la línea de prueba `console.table(generarVentas(10))` para que, al importar el módulo con `require("./generador")`, Node.js no imprimiera esa tabla automáticamente. También se estandarizó el espacio antes de `"g"` en los nombres de los cafés (`"Origen Huila 500 g"`, `"Origen Nariño 250 g"`, `"Origen Sierra 500 g"`) para mantener exactamente los mismos nombres que en `src/datos.js`.
+  - **Importaciones según el tipo de `module.exports`:** En `src/medir.js` se importó `generarVentas` directamente sin llaves (`const generarVentas = require("./generador")`) porque ese archivo exporta una única función, mientras que `{ primeraVentaOp, totalVendidoOp, ventaMayorOp, totalPorCiudadOp }` se importaron con desestructuración de objeto desde `"./analitica"`.
+  - **Recorrido de tamaños y contadores independientes por referencia:** Se definió el arreglo `tamanos = [100, 1000, 10000, 100000]` y un arreglo vacío `resultados = []`. En cada vuelta del ciclo `for...of`, se generaron `n` ventas con `generarVentas(n)` y se crearon cuatro objetos independientes con `{ operaciones: 0 }`. Como en JavaScript los objetos se pasan por referencia, usar objetos separados evita que el conteo de una función se mezcle o acumule con el de otra.
+  - **Tabla de resultados obtenida al ejecutar `node src/medir.js`:**
+
+| `n` (ventas generadas) | `primeraVentaOp` | `totalVendidoOp` | `ventaMayorOp` | `totalPorCiudadOp` |
+| ---: | ---: | ---: | ---: | ---: |
+| `100` | `1` | `100` | `100` | `100` |
+| `1000` | `1` | `1000` | `1000` | `1000` |
+| `10000` | `1` | `10000` | `10000` | `10000` |
+| `100000` | `1` | `100000` | `100000` | `100000` |
+
+### Comparación de predicciones frente a resultados reales
+1. **`primeraVentaOp` (predicción cumplida):** Se predijo que siempre haría `1` operación y en la tabla marcó exactamente `1` para `n = 100`, `1.000`, `10.000` y `100.000`. Multiplicar los datos por `1.000` (de `100` a `100.000`) multiplicó las operaciones por `1` (no creció nada).
+2. **`totalVendidoOp`, `ventaMayorOp` y `totalPorCiudadOp` (predicción cumplida):** Se predijo que al multiplicar `n` por `10` sus operaciones también se multiplicarían por `10`, y los números lo confirman de forma exacta: de `100` pasaron a `1.000` (`×10`), luego a `10.000` (`×10`) y finalmente a `100.000` (`×10`).
+
+### Clasificación Big O de las funciones medidas
+
+| Función | Complejidad temporal | Justificación en el código | Justificación con los números |
+| :--- | :---: | :--- | :--- |
+| `primeraVentaOp` | `O(1)` (constante) | No tiene ningún ciclo `for`. Solo verifica `listaVentas.length === 0` y accede de forma directa por índice a `listaVentas[0]`. | Con `100`, `1.000`, `10.000` y `100.000` ventas realiza siempre `1` operación. |
+| `totalVendidoOp` | `O(n)` (lineal) | Tiene un único ciclo `for...of` que recorre una vez cada elemento de `listaVentas` sumando `valorVenta(venta)` (trabajo constante por vuelta). | Hace `100` operaciones con `n = 100` y `100.000` con `n = 100.000` (relación exacta `1` a `1` con `n`). |
+| `ventaMayorOp` | `O(n)` (lineal) | Tiene un único ciclo `for...of` que visita cada venta una sola vez y ejecuta una comparación directa `valorVenta(venta) > valorVenta(mayor)`. | Crece en proporción directa al tamaño de entrada: cuando `n` sube `10` veces, las operaciones suben `10` veces (`100` → `1.000` → `10.000` → `100.000`). |
+| `totalPorCiudadOp` | `O(n)` (lineal) | Tiene un único ciclo `for...of`; en cada venta normaliza el texto y accede/actualiza una propiedad del objeto `totales[ciudad]` en tiempo constante `O(1)` sin ciclos internos. | Registra exactamente `n` pasos (`100`, `1.000`, `10.000`, `100.000`). Ninguna de estas cuatro funciones es `O(n²)` porque ninguna anida un ciclo dentro de otro sobre `listaVentas`. |

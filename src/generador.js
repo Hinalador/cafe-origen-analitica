@@ -1,14 +1,14 @@
 const productos = [
     {
-        nombre: "Origen Huila 500g",
+        nombre: "Origen Huila 500 g",
         precio: 42000
     },
     {
-        nombre: "Origen Nariño 250g",
+        nombre: "Origen Nariño 250 g",
         precio: 26000
     },
     {
-        nombre: "Origen Sierra 500g",
+        nombre: "Origen Sierra 500 g",
         precio: 45000
     },
     {
@@ -61,6 +61,6 @@ function generarVentas(n) {
     return (ventas)
 }
 
-console.table(generarVentas(10))
+//console.table(generarVentas(10))
 
 module.exports = generarVentas;
