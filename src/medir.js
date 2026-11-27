@@ -1,15 +1,32 @@
 const ventasDia1 = require("./datos");
+const catalogo = require("./catalogo");
 const generarVentas = require("./generador");
 const {
     primeraVentaOp,
     totalVendidoOp,
     ventaMayorOp,
     totalPorCiudadOp,
+    totalVendido,
+    totalVendidoM,
+    unidadesVendidas,
+    unidadesVendidasM,
+    ventaMayor,
+    ventaMayorM,
+    ticketPromedio,
+    ticketPromedioM,
+    totalPorCiudad,
+    unidadesPorProducto,
+    topProductosPorValor,
     clientesRecurrentes,
     totalCiudadCadena,
     totalCiudadUnaPasada,
     clientesRecurrentesSet,
     clientesRecurrentesMap,
+    productoEstrellaPorCiudad,
+    primerClienteUnico,
+    comboRegalo,
+    parMasCercano,
+    ventasDiarias,
     mejorSemanaBruta,
     mejorSemana
 } = require("./analitica");
@@ -146,6 +163,59 @@ if (rachaBruta90.diaInicio === rachaVentana90.diaInicio && rachaBruta90.total ==
 } else {
     console.log("[DIFERENTE]", rachaBruta90, rachaVentana90);
 }
+
+// --- MiniReto 12: Comparación de tiempo total v0.1 vs v1.0 (10.000 y 100.000 ventas) ---
+function ejecutarMotorV01(lista) {
+    const validas = lista.filter(function (venta) {
+        return venta.cantidad > 0;
+    });
+    totalVendidoM(lista);
+    unidadesVendidasM(lista);
+    ticketPromedioM(lista);
+    ventaMayorM(lista);
+    totalPorCiudad(lista);
+    unidadesPorProducto(lista);
+    topProductosPorValor(lista, 3);
+    return validas.length;
+}
+
+function ejecutarMotorV10(lista) {
+    let validas = 0;
+    for (const venta of lista) {
+        if (venta.cantidad > 0) {
+            validas++;
+        }
+    }
+    totalVendido(lista);
+    unidadesVendidas(lista);
+    ticketPromedio(lista);
+    ventaMayor(lista);
+    totalCiudadUnaPasada(lista, "Medellín");
+    totalPorCiudad(lista);
+    unidadesPorProducto(lista);
+    topProductosPorValor(lista, 3);
+    clientesRecurrentesSet(lista);
+    productoEstrellaPorCiudad(lista);
+    primerClienteUnico(lista);
+    comboRegalo(catalogo, 87000);
+    parMasCercano(catalogo, 100000);
+    mejorSemana(ventasDiarias, 7);
+    return validas;
+}
+
+console.log("\n=== MiniReto 12: Tiempo total del motor v0.1 vs v1.0 ===");
+for (const n of [10000, 100000]) {
+    const muestra = generarVentas(n);
+
+    console.time("Motor v0.1 base [n = " + n + "]");
+    ejecutarMotorV01(muestra);
+    console.timeEnd("Motor v0.1 base [n = " + n + "]");
+
+    console.time("Motor v1.0 completo (9 secciones) [n = " + n + "]");
+    ejecutarMotorV10(muestra);
+    console.timeEnd("Motor v1.0 completo (9 secciones) [n = " + n + "]");
+}
+
 
 
 

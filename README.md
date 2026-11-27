@@ -1,14 +1,20 @@
-# ☕ Café Origen — Analítica de Ventas (`v0.2`)
+# ☕ Café Origen — Motor de Analítica de Ventas (`v1.0`)
 
-Sistema de análisis, generación de reportes y evaluación de rendimiento en **JavaScript (Node.js)** para procesar registros de ventas de **Café Origen**. El proyecto explora la manipulación de arreglos de objetos, limpieza y normalización de datos, cálculo de métricas comerciales (con ciclos `for...of` y con métodos `map`, `filter`, `reduce`, `sort`, `slice`), manejo seguro de casos borde y análisis empírico y teórico de complejidad **Big O** en tiempo y memoria.
+Motor de análisis comercial y evaluación de rendimiento construido en **JavaScript (Node.js)** para **Café Origen**. Procesa historiales reales o simulados de hasta cientos de miles de transacciones en milisegundos, respondiendo preguntas clave de facturación, ciudades, productos, fidelización de clientes y campañas comerciales sin algoritmos cuadráticos (`O(n²)`).
 
-### ❓ Preguntas de Negocio que Responde el Motor
-1. **¿Cuánto se vendió en total y cuántas unidades salieron?** (`totalVendido`, `unidadesVendidas`)
-2. **¿Cuál fue la transacción de mayor valor?** (`ventaMayor`)
-3. **¿Cuánto gasta en promedio un cliente en una compra efectiva?** (`ticketPromedio`)
-4. **¿Cuánto se vendió en una ciudad puntual o en todas las ciudades del país?** (`ventasPorCiudad`, `totalPorCiudad`)
-5. **¿Cuántas unidades se vendieron de cada artículo y cuáles son los 3 productos que más ingresos generan?** (`unidadesPorProducto`, `topProductosPorValor`)
-6. **¿Cómo se comportaron las ventas en una fecha específica (con o sin movimiento)?** (`ventasDelDia`)
+---
+
+## ❓ Preguntas de Negocio que Responde el Producto
+
+1. **Resumen general:** ¿Cuánto se vendió en total, cuántas unidades salieron, cuál es el ticket promedio de compras efectivas (`cantidad > 0`) y cuál fue la venta individual más alta? (`totalVendido`, `unidadesVendidas`, `ticketPromedio`, `ventaMayor`)
+2. **Desempeño geográfico:** ¿Cuánto vende cada ciudad del país (unificando nombres con mayúsculas o espacios inconsistentes) y cuánto vendió una ciudad puntual? (`totalPorCiudad`, `totalCiudadUnaPasada`, `ventasPorCiudad`)
+3. **Desempeño de catálogo y Top 3:** ¿Cuántas unidades salieron de cada artículo y cuáles son los `k` productos que más dinero generan? (`unidadesPorProducto`, `topProductosPorValor`)
+4. **Fidelización en tiempo lineal:** ¿Cuáles clientes son recurrentes (`2` o más compras) en historiales de `100.000`+ ventas? (`clientesRecurrentesSet`, `comprasPorCliente`, `clientesRecurrentesMap`)
+5. **Preferencias locales:** ¿Cuál es el producto estrella (más frecuente) en cada ciudad? (`productoEstrellaPorCiudad`)
+6. **Campaña de recompra:** ¿Cuál fue el primer cliente de la temporada que compró una sola vez para enviarle un cupón de regreso? (`primerClienteUnico`)
+7. **Combos comerciales y corporativos:** ¿Qué par de productos suma exactamente una tarjeta regalo de \$87.000 y qué par aprovecha al máximo un presupuesto corporativo sin pasarse? (`comboRegalo`, `parMasCercano`)
+8. **Estacionalidad:** ¿Cuál fue la mejor racha de `7` días consecutivos de ventas del mes? (`mejorSemana`)
+9. **Corte diario:** ¿Cómo se comportó un día específico con movimiento o sin ventas? (`ventasDelDia`)
 
 ---
 
@@ -16,96 +22,65 @@ Sistema de análisis, generación de reportes y evaluación de rendimiento en **
 
 ```text
 cafe-origen-analitica/
-├── README.md           # Documentación general del proyecto
-├── RENDIMIENTO.md      # Informe de complejidad Big O, proyecciones, riesgos y plan de optimización
-├── bitacora.md         # Registro de hallazgos, trazas, mediciones y errores depurados
+├── README.md           # Documentación del producto, ejecución y arquitectura (v1.0)
+├── RENDIMIENTO.md      # Informe técnico Big O (tiempo y espacio), proyecciones y v0.1 vs v1.0
+├── bitacora.md         # Registro completo de los 12 MiniRetos, trazas, pruebas y decisiones
 └── src/
-    ├── datos.js        # Dataset base con los registros de ventas de Café Origen
-    ├── analitica.js    # Módulo principal con las funciones de limpieza, métricas y agrupaciones
-    ├── generador.js    # Generador de historiales sintéticos de n ventas para pruebas de escala
-    ├── explorar.js     # Script de exploración inicial y pruebas rápidas por consola
-    ├── verificar.js    # Script de validación entre implementaciones (for...of vs métodos de Array) y casos borde
-    ├── medir.js        # Conteo de operaciones y medición de tiempos de ejecución (Big O)
-    └── reporte.js      # Generador del reporte analítico formateado en consola (COP)
+    ├── datos.js        # Muestra histórica inicial (12 ventas con casos borde reales)
+    ├── catalogo.js     # Catálogo oficial de productos y precios para combos y presupuestos
+    ├── analitica.js    # Motor de funciones analíticas (ciclos, métodos, Set, Map, punteros y ventana)
+    ├── generador.js    # Generador de historiales sintéticos realistas de n ventas
+    ├── reporte.js      # Punto de entrada principal: reporte ejecutivo v1.0 (datos reales o n ventas)
+    ├── explorar.js     # Exploración inicial del dataset base
+    ├── verificar.js    # Suite de verificación automática de equivalencia, orden y casos borde
+    └── medir.js        # Conteo de operaciones y benchmarks de tiempo (Big O)
 ```
 
 ---
 
-## 📊 Estructura de los Datos (`src/datos.js`)
+## 🚀 Cómo Clonar y Ejecutar desde Cero
 
-Cada registro del arreglo `ventas` representa una transacción con las siguientes propiedades:
+### Requisitos previos
+- **Node.js** (versión LTS recomendada, `v18+` o superior). No requiere dependencias externas (`npm install` no es necesario; usa únicamente módulos nativos de Node.js).
 
-| Propiedad | Tipo | Descripción | Ejemplo |
-| :--- | :--- | :--- | :--- |
-| `id` | `number` | Identificador único de la venta | `1` |
-| `fecha` | `string` | Fecha en formato `AAAA-MM-DD` | `"2026-09-01"` |
-| `cliente` | `string` | Código identificador del cliente | `"C01"` |
-| `producto` | `string` | Nombre del café o accesorio | `"Origen Huila 500 g"` |
-| `ciudad` | `string` | Ciudad de la venta (puede contener espacios o variación de mayúsculas) | `"Medellín"`, `"medellín "` |
-| `cantidad` | `number` | Unidades vendidas (`0` indica registro sin unidades efectivas) | `2` |
-| `precio` | `number` | Precio unitario en pesos colombianos (COP) | `42000` |
-
----
-
-## ⚙️ Funciones del Módulo Analítico (`src/analitica.js`)
-
-El módulo exporta funciones auxiliares, métricas implementadas con ciclos tradicionales (`for...of`) y su contraparte funcional con métodos de arreglos (sufijo `M`):
-
-### 1. Utilidades y Normalización
-* **`valorVenta(venta)`**: Calcula el subtotal de una venta (`cantidad * precio`).
-* **`normalizar(texto)`**: Limpia espacios laterales (`.trim()`) y convierte a minúsculas (`.toLowerCase()`) para comparaciones insensibles a formato.
-* **`nombreCiudad(texto)`**: Estandariza el nombre de una ciudad en formato título (ej. `"  medellín "` $\rightarrow$ `"Medellín"`).
-
-### 2. Métricas con Ciclos (`for...of`) vs. Métodos de Arreglo (`M`)
-
-| Operación | Versión `for...of` | Versión Métodos (`Array`) | Descripción |
-| :--- | :--- | :--- | :--- |
-| **Total vendido** | `totalVendido(lista)` | `totalVendidoM(lista)` | Suma el valor (`cantidad * precio`) de todas las ventas. |
-| **Unidades vendidas** | `unidadesVendidas(lista)` | `unidadesVendidasM(lista)` | Suma el total de unidades vendidas. |
-| **Venta mayor** | `ventaMayor(lista)` | `ventaMayorM(lista)` | Retorna el objeto de venta con mayor valor total (`null` si la lista está vacía). |
-| **Ticket promedio** | `ticketPromedio(lista)` | `ticketPromedioM(lista)` | Promedio en dinero considerando **solo ventas válidas** (`cantidad > 0`). Retorna `0` si no hay ventas válidas. |
-| **Ventas por ciudad** | `ventasPorCiudad(lista, ciudad)` | `ventasPorCiudadM(lista, ciudad)` | Calcula el monto total vendido en una ciudad específica (normalizada). |
-| **Ventas del día** | `ventasDelDia(lista, fecha)` | `ventasDelDiaM(lista, fecha)` | Filtra y retorna el arreglo de ventas correspondientes a una fecha `AAAA-MM-DD`. |
-
-### 3. Agrupaciones y Rankings
-* **`totalPorCiudad(listaVentas)`**: Agrupa y suma el valor total vendido por cada ciudad normalizada, retornando un objeto `{ Ciudad: montoTotal }`.
-* **`unidadesPorProducto(listaVentas)`**: Calcula cuántas unidades físicas se vendieron de cada producto `{ Producto: totalUnidades }`.
-* **`topProductosPorValor(listaVentas, k = 3)`**: Calcula el ingreso generado por cada producto y retorna los `k` productos con mayor facturación ordenados de mayor a menor (`[[producto, monto], ...]`) sin modificar el arreglo original.
-
----
-
-## 🚀 Cómo Ejecutar el Proyecto
-
-Asegúrate de tener **Node.js** instalado. Desde la carpeta `cafe-origen-analitica` (o indicando la ruta correspondiente), puedes ejecutar cualquiera de los tres scripts:
-
-### 1. Exploración de datos y pruebas de funciones
-Muestra la tabla de datos crudos y el resultado individual de cada función analítica:
+### 1. Clonar el repositorio
 ```bash
-node src/explorar.js
+git clone https://github.com/Hinalador/cafe-origen-analitica.git
+cd cafe-origen-analitica
 ```
 
-### 2. Verificación y casos borde
-Compara automáticamente que las funciones con `for...of` y las funciones con métodos (`reduce`/`filter`) produzcan exactamente el mismo resultado (`[OK]`), además de probar arreglos vacíos `[]` y de un solo elemento:
+### 2. Ejecutar el reporte final `v1.0`
+- **Con los datos reales de muestra (Día 1 + corte de día con ventas + simulación de día sin ventas):**
+  ```bash
+  node src/reporte.js
+  ```
+- **Con `n` ventas generadas dinámicamente (por ejemplo `100.000` ventas en `~0,1 s`):**
+  ```bash
+  node src/reporte.js 100000
+  ```
+
+### 3. Ejecutar la suite de verificación automática
+Comprueba con `[OK]` que todas las versiones (ciclos vs. métodos, fuerza bruta vs. `Set`/`Map`, fuerza bruta vs. ventana deslizante) entreguen resultados idénticos, respeta la no mutación de los arreglos originales y valida casos borde (`[]`, `1` elemento, presupuestos sin solución):
 ```bash
 node src/verificar.js
 ```
 
-### 3. Reporte analítico en consola
-Genera el informe ejecutivo **CAFÉ ORIGEN — REPORTE ANALÍTICO v0.1** con formato de moneda colombiana (COP), desglose por ciudad, unidades por producto, Top 3 productos y una simulación de un día sin ventas:
-```bash
-node src/reporte.js
-```
-
-### 4. Medición de operaciones y tiempos (`v0.2`)
-Ejecuta el conteo de operaciones (`100` a `100.000` ventas), los tiempos reales de `clientesRecurrentes` (`1.000` a `16.000`) y la comparación `totalCiudadCadena` vs `totalCiudadUnaPasada`:
+### 4. Ejecutar mediciones de operaciones y tiempos (Big O)
+Muestra la tabla de operaciones (`100` a `100.000`), la curva cuadrática vs. lineal y la comparación de rendimiento entre versiones:
 ```bash
 node src/medir.js
 ```
 
+### 5. Exploración inicial de datos crudos
+```bash
+node src/explorar.js
+```
+
 ---
 
-## 🛡️ Decisiones Técnicas y Manejo de Casos Borde
+## ⚡ Resumen de Optimización (`v0.1` / `v0.2` → `v1.0`)
 
-1. **Exclusión de registros con `cantidad: 0` en el Ticket Promedio:** La venta `#8` tiene `cantidad: 0`. Si se incluyera en el denominador del promedio, reduciría artificialmente el ticket promedio. Por ello, `ticketPromedio` y `ticketPromedioM` filtran únicamente ventas con `cantidad > 0`.
-2. **Prevención de `NaN` en días sin ventas:** Cuando se consulta una fecha sin registros o un arreglo vacío (`[]`), las funciones verifican si el conteo de ventas válidas es `0` antes de dividir, retornando `0` de forma segura.
-3. **Limpieza de cadenas en ciudades:** Registros como `"medellín "` y `"Bogotá "` contienen espacios al final o minúsculas iniciales. Con `normalizar()` y `nombreCiudad()` se consolidan bajo una única clave por ciudad.
+- **Cero funciones `O(n²)` en producción:** `clientesRecurrentes` pasó de dos ciclos anidados con `.includes()` (`43,57 s` en `100.000` ventas) a `clientesRecurrentesSet` con tablas hash `Set` (`12,51 ms` en `100.000` ventas, **`~3.482×` más rápida**).
+- **Cuidado de memoria en servidor (`O(1)` espacial):** El reporte `v1.0` reemplaza cadenas de métodos que duplicaban arreglos intermedios por recorridos de una sola pasada.
+- **Estrategias algorítmicas aplicadas:** Conjuntos (`Set`), mapas de frecuencias y de complementos (`Map`), ventana deslizante de tamaño fijo (`O(n)`) y dos punteros sobre copia ordenada (`O(n log n)`).
+- **Tiempo total de `node src/reporte.js 100000`:** **`~106 ms`** con todas las 9 secciones impresas en consola (límite exigido: `< 5.000 ms`).

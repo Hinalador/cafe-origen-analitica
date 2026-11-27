@@ -532,3 +532,34 @@ Ventana 3 (índices 2..8, días 3 al 9) -> sale 410, entra 290:
 | `mejorSemanaBruta(dias, k)` | `O(n · k)` | `O(1)` | Por cada una de las `n - k + 1` posiciones iniciales recorre internamente `k` elementos sumando desde cero. |
 | `mejorSemana(dias, k)` | **`O(n)`** | **`O(1)`** | Suma los primeros `k` días una vez y luego avanza desde `k` hasta `n - 1` haciendo solo `1` suma y `1` resta por día (`k + (n - k) = n` pasos totales) y usando variables simples. |
 | `parMasCercano(precios, presupuesto)` | **`O(n log n)`** | **`O(n)`** | Copiar y ordenar `[...precios].sort(...)` cuesta `O(n log n)` y el ciclo `while (izq < der)` recorre el arreglo a lo sumo una vez (`O(n)`); al sumar `O(n log n) + O(n)` domina **`O(n log n)`**. En memoria usa `O(n)` por la copia ordenada (el recorrido de punteros por sí solo es `O(1)`). |
+
+## MiniReto 12: Analítica Café Origen `v1.0` — Lanzamiento y cierre de la semana
+
+### 1. Integración del reporte final (`src/reporte.js`) y parámetro por consola (`process.argv`)
+- Se actualizó `src/reporte.js` a la versión **`v1.0`** reemplazando las cadenas con arreglos intermedios por funciones de una sola pasada (`totalVendido`, `unidadesVendidas`, `ticketPromedio`, `ventaMayor`, `contarVentasValidas`) e integrando las cinco secciones nuevas optimizadas:
+  - **Sección 5:** Clientes recurrentes con `clientesRecurrentesSet` (`O(n)`).
+  - **Sección 6:** Producto estrella por ciudad con `productoEstrellaPorCiudad` (`O(n)`).
+  - **Sección 7:** Cliente sugerido para cupón de regreso con `primerClienteUnico` (`O(n)`).
+  - **Sección 8:** Combo de tarjeta regalo (`$87.000`) con `comboRegalo` (`O(m)`) y sugerencia corporativa (`máx. $100.000`) con `parMasCercano` (`O(m log m)`).
+  - **Sección 9:** Mejor semana de septiembre (`k = 7`) con ventana deslizante `mejorSemana` (`O(d)`).
+- Se añadió lectura de argumentos con `process.argv[2]`:
+  - Sin argumentos (`node src/reporte.js`), ejecuta el reporte completo sobre las `12` ventas reales del Día 1 más el día con ventas (`2026-09-01`) y la simulación de día sin ventas (`2026-09-10`).
+  - Con argumento numérico (`node src/reporte.js 100000`), genera `n` ventas con `generarVentas(n)`, imprime las `9` secciones y mide el tiempo total: **`37,982 ms`** para `10.000` ventas y **`106,082 ms` (`0,106 s`)** para `100.000` ventas (casi `50` veces por debajo del límite máximo de `5 segundos`).
+- Se actualizaron `RENDIMIENTO.md` (tabla completa de las funciones de `v0.1` a `v1.0` y comparativa `v0.1` / sin optimizar vs `v1.0`) y `README.md` como documentación final de producto.
+
+### 2. Resumen de cierre de la Semana 1 (MiniRetos 1 al 12 y estrategias aplicadas)
+
+| MiniReto | Qué se construyó | Estrategia algorítmica / técnica aplicada |
+| :---: | :--- | :--- |
+| **1** | Configuración del repositorio, modelo `src/datos.js`, `src/explorar.js`, diccionario de datos y detección de casos borde. | Modelado con arreglos de objetos e inspección exploratoria de calidad de datos. |
+| **2** | Indicadores base (`valorVenta`, `totalVendido`, `unidadesVendidas`, `ventaMayor`, `ticketPromedio`, `ventasPorCiudad`) y trazas manuales. | Recorrido lineal imperativo (`for...of`) con patrones contador, acumulador, máximo y normalización de cadenas (`O(n)` tiempo, `O(1)` espacio). |
+| **3** | Versiones declarativas (`*M`), agrupaciones (`totalPorCiudad`, `unidadesPorProducto`), ranking `topProductosPorValor` y `src/verificar.js`. | Tuberías declarativas (`map`, `filter`, `reduce`), objetos como diccionarios agrupadores y copia inmutable `[...]` previa a `.sort()`. |
+| **4 (`v0.1`)** | Primer reporte ejecutivo formateado en COP (`src/reporte.js`), `ventasDelDia` y depuración documentada de `Bogotá` duplicada y `NaN`. | Método de depuración sistemática (reproducir, hipótesis, prueba, causa y corrección) y guardas de casos borde (`[]`, `cantidad === 0`). |
+| **5** | Generador sintético `generarVentas(n)`, funciones instrumentadas `*Op` y banco de pruebas `src/medir.js` (`100` a `100.000`). | Conteo empírico de operaciones pasando un objeto contador por referencia para contrastar `O(1)` frente a `O(n)`. |
+| **6** | Diagnóstico de `clientesRecurrentes`, traza de pares, curva de tiempos (`1.000` a `100.000`) y proyección a `1.000.000`. | Análisis de peor caso en ciclos anidados ($n(n-1)/2 \rightarrow O(n^2)$) e identificación del recorrido lineal oculto en `.includes()`. |
+| **7** | Comparación `totalCiudadCadena` vs `totalCiudadUnaPasada` y auditoría de memoria adicional de todo el motor. | Optimización de complejidad espacial (`O(n)` → `O(1)`) reemplazando `4` pasadas y `3` arreglos intermedios por una sola pasada `for...of`. |
+| **8 (`v0.2`)** | Informe técnico `RENDIMIENTO.md` con complejidades, proyecciones al millón de ventas, matriz de riesgos, plan de mejora y revisión entre pares. | Evaluación integral tiempo/espacio (`O(n + p log p)` en rankings) y priorización de cuellos de botella con evidencia medida. |
+| **9** | `clientesRecurrentesSet`, `comprasPorCliente` y `clientesRecurrentesMap` verificados y medidos hasta `100.000` ventas (`12,5 ms`). | **Intercambio tiempo por memoria con tablas hash (`Set` y `Map`):** reemplazo de búsqueda lineal/anidada por consultas `.has()` en `O(1)`, bajando de `O(n²)` a `O(n)`. |
+| **10** | `src/catalogo.js`, `comboRegalo`, `productoEstrellaPorCiudad` y `primerClienteUnico`. | **Búsqueda de complemento (`valor - precio`) con `Map`** en una pasada `O(n)` y **conteo de frecuencias con `Map`** (simple y anidado por ciudad). |
+| **11** | `mejorSemana` (frente a `mejorSemanaBruta`) sobre `ventasDiarias` / `100.000` días y `parMasCercano` sobre el catálogo. | **Ventana deslizante de tamaño fijo** (`+ entra - sale`, de `O(n·k)` a `O(n)` y espacio `O(1)`) y **dos punteros desde los extremos** sobre copia ordenada (`O(n log n)`). |
+| **12 (`v1.0`)** | Lanzamiento del reporte unificado `src/reporte.js` con soporte CLI (`process.argv`), comparativa `v0.1` vs `v1.0` y cierre documental. | Integración modular libre de funciones `O(n²)`, logrando ejecutar las `9` secciones sobre `100.000` ventas en `~0,10 s`. |
