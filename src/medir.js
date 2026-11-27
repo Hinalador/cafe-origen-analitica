@@ -1,11 +1,14 @@
+const ventasDia1 = require("./datos");
 const generarVentas = require("./generador");
 const {
     primeraVentaOp,
     totalVendidoOp,
     ventaMayorOp,
-    totalPorCiudadOp
+    totalPorCiudadOp,
+    clientesRecurrentes
 } = require("./analitica");
 
+// --- MiniReto 5: Conteo de operaciones ---
 const tamanos = [100, 1000, 10000, 100000];
 const resultados = [];
 
@@ -33,5 +36,29 @@ for (const n of tamanos) {
     resultados.push(fila);
 }
 
-console.log("=== Conteo de operaciones según el tamaño de los datos (n) ===");
+console.log("=== MiniReto 5: Conteo de operaciones según n ===");
 console.table(resultados);
+
+// --- MiniReto 6: Verificación y tiempos de clientesRecurrentes ---
+console.log("\n=== MiniReto 6: Clientes recurrentes (12 ventas Día 1) ===");
+const recurrentesDia1 = clientesRecurrentes(ventasDia1);
+console.log("Clientes recurrentes encontrados:", recurrentesDia1);
+
+console.log("\n=== MiniReto 6: Tiempos de ejecución de clientesRecurrentes ===");
+const tamanosTiempo = [1000, 2000, 4000, 8000, 16000];
+
+for (const n of tamanosTiempo) {
+    const ventasGeneradas = generarVentas(n);
+    const etiqueta = "clientesRecurrentes (n = " + n + ")";
+
+    console.time(etiqueta);
+    clientesRecurrentes(ventasGeneradas);
+    console.timeEnd(etiqueta);
+}
+
+// Prueba adicional ejecutada para n = 100000 (estimación < 2 min -> tardó ~43.6 s):
+// const ventasCienMil = generarVentas(100000);
+// console.time("clientesRecurrentes (n = 100000)");
+// clientesRecurrentes(ventasCienMil);
+// console.timeEnd("clientesRecurrentes (n = 100000)");
+
