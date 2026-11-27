@@ -1,4 +1,5 @@
 const ventas = require("./datos");
+const generarVentas = require("./generador");
 const {
     totalVendido,
     totalVendidoM,
@@ -14,7 +15,10 @@ const {
     ventasDelDiaM,
     totalPorCiudad,
     unidadesPorProducto,
-    topProductosPorValor
+    topProductosPorValor,
+    clientesRecurrentes,
+    clientesRecurrentesSet,
+    clientesRecurrentesMap
 } = require("./analitica");
 
 function verificarIgualdad(nombre, esperado, obtenido) {
@@ -59,3 +63,20 @@ console.log("Arreglo vacío -> unidadesVendidas:", unidadesVendidas([]));
 console.log("Arreglo vacío -> ventaMayor:", ventaMayor([]));
 console.log("Arreglo vacío -> ticketPromedio:", ticketPromedio([]));
 console.log("Un elemento -> ticketPromedio:", ticketPromedio([ventas[0]]));
+
+console.log("\n--- MiniReto 9: Clientes recurrentes (Original vs Set vs Map) ---");
+const origDia1 = [...clientesRecurrentes(ventas)].sort();
+const setDia1 = [...clientesRecurrentesSet(ventas)].sort();
+const mapDia1 = [...clientesRecurrentesMap(ventas)].sort();
+
+verificarIgualdad("clientesRecurrentes Día 1 (Original vs Set)", origDia1, setDia1);
+verificarIgualdad("clientesRecurrentes Día 1 (Original vs Map)", origDia1, mapDia1);
+
+const ventasCincoMil = generarVentas(5000);
+const orig5000 = [...clientesRecurrentes(ventasCincoMil)].sort();
+const set5000 = [...clientesRecurrentesSet(ventasCincoMil)].sort();
+const map5000 = [...clientesRecurrentesMap(ventasCincoMil)].sort();
+
+verificarIgualdad("clientesRecurrentes n=5000 (Original vs Set)", orig5000, set5000);
+verificarIgualdad("clientesRecurrentes n=5000 (Original vs Map)", orig5000, map5000);
+verificarIgualdad("clientesRecurrentes arreglo vacío []", clientesRecurrentesSet([]), []);

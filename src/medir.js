@@ -7,7 +7,9 @@ const {
     totalPorCiudadOp,
     clientesRecurrentes,
     totalCiudadCadena,
-    totalCiudadUnaPasada
+    totalCiudadUnaPasada,
+    clientesRecurrentesSet,
+    clientesRecurrentesMap
 } = require("./analitica");
 
 // --- MiniReto 5: Conteo de operaciones ---
@@ -81,4 +83,30 @@ if (resultadoCadena === resultadoUnaPasada) {
 } else {
     console.log("[DIFERENTE] Cadena:", resultadoCadena, "| Una pasada:", resultadoUnaPasada);
 }
+
+// --- MiniReto 9: Comparación de tiempos Original O(n^2) vs Set O(n) vs Map O(n) ---
+console.log("\n=== MiniReto 9: Clientes recurrentes (Original vs Set vs Map) ===");
+const tamanosReto9 = [1000, 10000, 100000];
+
+for (const n of tamanosReto9) {
+    const muestra = generarVentas(n);
+    console.log("\n--- Tamaño n = " + n + " ---");
+
+    if (n <= 10000) {
+        console.time("Original O(n^2) [n = " + n + "]");
+        clientesRecurrentes(muestra);
+        console.timeEnd("Original O(n^2) [n = " + n + "]");
+    } else {
+        console.log("Original O(n^2) [n = 100000]: omitida en corrida rápida (medida previa: 43.566s)");
+    }
+
+    console.time("Versión Set O(n) [n = " + n + "]");
+    clientesRecurrentesSet(muestra);
+    console.timeEnd("Versión Set O(n) [n = " + n + "]");
+
+    console.time("Versión Map O(n) [n = " + n + "]");
+    clientesRecurrentesMap(muestra);
+    console.timeEnd("Versión Map O(n) [n = " + n + "]");
+}
+
 

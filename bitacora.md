@@ -397,3 +397,42 @@ Tomando como base la medición estable de `n = 16.000` (`864,605 ms ≈ 0,865 s`
     - Con un catálogo comercial fijo y pequeño (`p = 5`), `p log p` es constante y domina el recorrido lineal **`O(n)`**.
     - En cambio, en el peor caso teórico general donde cada venta correspondiera a un producto completamente distinto (`p = n`), sí pasaría a costar **`O(n log n)`** en tiempo y **`O(n)`** en memoria.
   - A raíz de esta observación, se dejó explícita la expresión `O(n + p log p)` (distinguiendo el caso de catálogo fijo frente al peor caso `p = n`) tanto en la tabla principal como en la sección de **Riesgos** de `RENDIMIENTO.md`.
+
+## MiniReto 9: Clientes recurrentes en tiempo lineal (`Set` y `Map`)
+
+### 1. Aplicación de las 6 fases del método de resolución de problemas
+1. **Entender el problema:**
+   - **Entrada:** Un arreglo `ventas` de tamaño `n`, donde cada elemento es un objeto con la propiedad `cliente` (`string`, por ejemplo `"C01"`).
+   - **Salida:** Un arreglo de códigos de clientes únicos (sin duplicados) que hayan realizado **`2` o más compras** en el historial.
+   - **Restricciones:** Debe procesar `100.000` ventas en **menos de `1 segundo`**, no debe mutar el arreglo `ventas` recibido y debe manejar casos borde sin fallar.
+2. **Ejemplos y casos borde (calculados a mano):**
+   - Muestra Día 1 (`12` ventas): `C01` (`3` veces), `C02` (`2` veces), `C03` (`2` veces) y `C04`–`C08` (`1` vez) → `["C01", "C02", "C03"]`.
+   - Arreglo vacío `[]` → `[]`.
+   - Una sola venta `[{ cliente: "C01", ... }]` → `[]` (ningún cliente puede tener `2` compras).
+   - Todos distintos (`C01`, `C02`, `C03`) → `[]`.
+   - Mismo cliente tres veces (`C01`, `C01`, `C01`) → `["C01"]` (aparece una sola vez en la respuesta).
+3. **Fuerza bruta y su complejidad:**
+   - La versión inicial `clientesRecurrentes(ventas)` usa dos ciclos `for` anidados (`i` y `j = i + 1`) para comparar todos los pares de ventas (`n × (n - 1) / 2`) y llama a `!recurrentes.includes(...)` para evitar repetidos: cuesta **`O(n²)`** en tiempo (hasta `O(n³)` en el peor caso por `.includes()`) y `O(n)` en espacio.
+4. **Optimizar (eliminar trabajo repetido):**
+   - El trabajo repetido consiste en volver a recorrer el resto del arreglo buscando el mismo cliente y volver a recorrer `recurrentes` con `.includes()`.
+   - Reemplazamos las búsquedas en arreglos por estructuras hash de JavaScript (`Set` y `Map`), donde consultar si una clave existe (`.has()`) e insertarla/actualizarla (`.add()` / `.set()`) toma tiempo constante promedio **`O(1)`**, permitiendo resolver el problema en un solo recorrido lineal **`O(n)`**.
+5. **Implementar (`src/analitica.js`):**
+   - **`clientesRecurrentesSet(ventas)`:** Crea `vistos = new Set()` y `recurrentes = new Set()`. En un único `for...of`, si `vistos.has(cliente)` es verdadero lo agrega a `recurrentes` (que ignora duplicados automáticamente); si no, lo agrega a `vistos`. Al final retorna `[...recurrentes]`.
+   - **`comprasPorCliente(ventas)` y `clientesRecurrentesMap(ventas)`:** La primera recorre `ventas` con un `Map` (`conteo`), iniciando en `1` o sumando `actual + 1` con `.get()` y `.set()`. La segunda recorre los pares `[cliente, cantidadCompras]` del `Map` y guarda en un arreglo aquellos con `cantidadCompras >= 2`.
+6. **Probar y verificar orden (`src/verificar.js`):**
+   - Como `clientesRecurrentesSet` inserta al cliente en su **segunda** compra mientras que `Map` y la versión original conservan el orden de la **primera** compra, en `src/verificar.js` se ordenaron copias con `[...resultado].sort()` antes de comparar.
+   - Resultado: **`[OK]`** tanto con las `12` ventas del Día 1 como con `5.000` ventas generadas y con el arreglo vacío `[]`. Complejidad final verificada: **`O(n)` temporal** y **`O(n)` espacial**.
+
+### 2. Medición comparativa de tiempos (`1.000`, `10.000` y `100.000` ventas)
+
+| `n` (ventas) | Original `O(n²)` (`for` anidado + `includes`) | Versión `Set` `O(n)` | Versión `Map` `O(n)` | Mejora (`Original / Set`) |
+| ---: | ---: | ---: | ---: | :---: |
+| `1.000` | `2,362 ms` | `0,248 ms` | `0,276 ms` | `~9,5×` más rápida |
+| `10.000` | `340,445 ms` | `1,315 ms` | `3,460 ms` | `~259×` más rápida |
+| `100.000` | `43.566,000 ms` (`43,57 s`) | **`12,511 ms`** (`0,0125 s`) | **`16,385 ms`** (`0,0164 s`) | **`~3.482×` más rápida** |
+
+- **Crecimiento lineal vs. cuadrático:** Al multiplicar `n` por `10` (de `10.000` a `100.000`), la versión original multiplicó su tiempo más de `127` veces (`0,34 s` → `43,57 s`), mientras que `clientesRecurrentesSet` creció linealmente `~9,5` veces (`1,32 ms` → `12,51 ms`), respondiendo en **12,5 milisegundos** (muy por debajo del límite de `1.000 ms` exigido por el marketplace).
+
+### 3. Intercambio entre tiempo y memoria (*time–space trade-off*)
+- Para bajar el tiempo de **`O(n²)`** a **`O(n)`**, la nueva solución asume un costo explícito de memoria adicional **`O(n)`** (más exactamente `O(u)`, donde `u` es el número de clientes distintos, que con el generador es `≈ n / 3`).
+- En `clientesRecurrentesSet`, `vistos` llega a guardar todos los clientes únicos y `recurrentes` guarda los repetidos; en `comprasPorCliente`, el `Map` almacena una entrada `[cliente, conteo]` por cada cliente único. Ese espacio extra de unos pocos megabytes para `100.000` ventas es un intercambio completamente favorable porque evita bloquear el servidor durante `43` segundos (o más de una hora con un millón de ventas).
