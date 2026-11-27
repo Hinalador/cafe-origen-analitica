@@ -333,3 +333,47 @@ Tomando como base la medición estable de `n = 16.000` (`864,605 ms ≈ 0,865 s`
 
 ### 7. Conclusión sin tecnicismos para la gerente de Café Origen
 > *"El reporte actual de clientes recurrentes funciona bien con pocos pedidos porque revisa la primera venta y la compara una por una contra todas las demás de la lista; luego toma la segunda venta y vuelve a compararla contra todas las siguientes, y además cada vez que encuentra un cliente repetido vuelve a leer de principio a fin la lista de clientes frecuentes para no anotarlo dos veces. Con las 12 ventas de prueba eso apenas toma 66 revisiones y es instantáneo, pero cuando los datos crecen el esfuerzo se dispara: cada vez que se duplican las ventas del mes, el computador tarda cuatro veces más. Con 100.000 ventas ya se demora unos 44 segundos, y cuando abramos en grandes superficies y el marketplace y lleguemos a un millón de ventas anuales, este único reporte dejaría la pantalla congelada más de una hora haciendo quinientos mil millones de comparaciones repetidas. Antes de salir a producción debemos cambiar la forma en que recordamos qué clientes ya vimos para leer el historial una sola vez."*
+
+## MiniReto 7: Tiempo, memoria y cadenas de métodos
+
+### 1. Implementación y verificación con `10.000` ventas generadas
+- Se agregaron en `src/analitica.js` dos implementaciones equivalentes:
+  - **`totalCiudadCadena(ventas, ciudad)`:** Encadena `.map()` (crea objetos con `ciudadNormalizada`, `cantidad` y `precio`) → `.filter()` (deja solo los que coinciden con `objetivo`) → `.map()` (calcula `valorVenta`) → `.reduce()` (suma desde `0`).
+  - **`totalCiudadUnaPasada(ventas, ciudad)`:** Recorre `ventas` una sola vez con `for...of`, compara `normalizar(venta.ciudad) === objetivo` y acumula en una variable numérica `let total = 0`.
+- **Verificación en `src/medir.js` con `n = 10.000` ventas:** Ambas funciones devolvieron exactamente el mismo monto (`503345000`, confirmado con `[OK]`), con `1,781 ms` en `totalCiudadCadena` frente a `0,675 ms` en `totalCiudadUnaPasada`.
+
+### 2. Conteo de recorridos, arreglos nuevos y Big O (tiempo y espacio)
+
+| Versión | Recorridos sobre datos | Arreglos nuevos creados | Complejidad temporal | Complejidad espacial (memoria adicional) |
+| :--- | :---: | :---: | :---: | :---: |
+| `totalCiudadCadena` | **`4` recorridos** (`map` sobre `n`, `filter` sobre `n`, `map` sobre los `m` filtrados y `reduce` sobre los `m` subtotales; hasta `4n` en el peor caso) | **`3` arreglos nuevos** (`1` arreglo de `n` objetos en el primer `map`, `1` arreglo en `filter` y `1` arreglo numérico en el segundo `map`; `reduce` no crea arreglo) | `O(n)` *(proviene de `O(4n)`)* | `O(n)` *(hasta `3n` posiciones + `n` objetos)* |
+| `totalCiudadUnaPasada` | **`1` único recorrido** (`for...of` sobre los `n` registros) | **`0` arreglos nuevos** (solo usa las variables simples `objetivo` y `total`) | `O(n)` *(proviene de `O(1n)`)* | `O(1)` *(memoria fija constante)* |
+
+### 3. ¿Por qué `O(4n)` y `O(1n)` se simplifican ambas a `O(n)`?
+- La notación Big O describe la **tasa de crecimiento** del algoritmo cuando `n` tiende a valores muy grandes, ignorando factores constantes fijos que no dependen de `n`.
+- Según la regla de eliminación de constantes multiplicativas, en `O(4n)` el número `4` es fijo (no cambia aunque `n` pase de `1.000` a `1.000.000`). Si `n` se multiplica por `10`, tanto `1n` como `4n` multiplican su trabajo exactamente por `10` (crecimiento lineal `O(n)`).
+- Aun así, tener la misma clase `O(n)` en tiempo **no significa que gasten los mismos recursos reales**: la constante `4` más la creación en memoria de `3` arreglos intermedios explica por qué `totalCiudadCadena` tardó más del doble (`1,781 ms` vs `0,675 ms`) y pasa de `O(1)` a `O(n)` en memoria.
+
+### 4. Clasificación de complejidad espacial de todas las funciones del motor
+
+| Función(es) en `src/analitica.js` | Complejidad espacial | Justificación en el código |
+| :--- | :---: | :--- |
+| `valorVenta`, `normalizar`, `nombreCiudad` | `O(1)` | Operan sobre un único registro o cadena corta sin crear colecciones proporcionales a `n`. |
+| `primeraVentaOp` | `O(1)` | Solo incrementa el contador existente y retorna la referencia `listaVentas[0]`. |
+| `totalVendido`, `totalVendidoOp`, `unidadesVendidas`, `totalUnidades`, `unidadesVendidasM`, `totalUnidadesM` | `O(1)` | Solo mantienen un acumulador numérico (`total` / `unidades` / `acc` en `reduce`) sin crear arreglos intermedios. |
+| `ventaMayor`, `ventaMayorOp`, `ventaMayorM` | `O(1)` | Guardan únicamente una referencia (`mayor`) a un objeto que ya existe dentro de `listaVentas`. |
+| `ticketPromedio` | `O(1)` | Solo usa dos variables numéricas (`sumaValidas` y `conteoValidas`). |
+| `ventasPorCiudad`, `totalCiudadUnaPasada` | `O(1)` | Solo usan la cadena `objetivo` y el acumulador numérico `totalCiudad` / `total`. |
+| `totalVendidoM` | `O(n)` | `.map()` construye un arreglo nuevo con `n` subtotales antes de pasarlo a `.reduce()`. |
+| `ticketPromedioM` | `O(n)` | `.filter()` crea el arreglo `validas` (hasta `n` elementos) y `totalVendidoM(validas)` crea otro arreglo con `.map()`. |
+| `ventasPorCiudadM` | `O(n)` | `.filter()` y `.map()` crean dos arreglos intermedios que en el peor caso (todas las ventas en la misma ciudad) tienen tamaño `n`. |
+| `totalCiudadCadena` | `O(n)` | Crea siempre un primer arreglo de `n` objetos nuevos con `.map()`, más los arreglos de `.filter()` y el segundo `.map()`. |
+| `ventasDelDia`, `ventasDelDiaM` | `O(n)` | Construyen y retornan un arreglo con las ventas de esa fecha; en el peor caso (todas del mismo día) guarda `n` elementos. |
+| `totalPorCiudad`, `totalPorCiudadM`, `totalPorCiudadOp` | `O(c)` → peor caso `O(n)` *(práctico `O(1)`)* | Crean un objeto diccionario con una propiedad por cada **ciudad distinta (`c`)**. En el peor caso teórico general donde cada venta fuera de una ciudad diferente (`c = n`), crece como `O(n)`; en el negocio real de Café Origen con catálogo fijo de `4` ciudades (`c ≪ n`), ocupa memoria prácticamente constante. |
+| `unidadesPorProducto` | `O(p)` → peor caso `O(n)` *(práctico `O(1)`)* | Crea un objeto con una clave por cada **producto distinto (`p`)** (`O(n)` si hubiera `n` productos únicos; acotado a `5` claves con catálogo fijo). |
+| `topProductosPorValor` | `O(p)` → peor caso `O(n)` *(práctico `O(1)`)* | Crea el objeto `totalesPorProducto` (`p` claves), el arreglo `Object.entries` (`p` pares), su copia `[...pares]` (`p` pares) y el corte `.slice(0, k)`. Depende del número de productos distintos `p`: en el peor caso teórico (`p = n`) es `O(n)`, pero con un catálogo pequeño fijo no crece al aumentar el millón de ventas. |
+| `clientesRecurrentes` | `O(n)` | El arreglo `recurrentes` almacena cada cliente repetido (hasta `n / 2` clientes distintos en el peor caso, o `≈ n / 3` con el generador). |
+
+### 5. Decisión técnica: ¿cuál versión de `totalCiudad` elegir para el motor?
+- **Decisión:** Se elige **`totalCiudadUnaPasada`** (misma estrategia de recorrido único que `ventasPorCiudad`) como la versión principal para producción en el servidor del marketplace, dejando `totalCiudadCadena` exportada únicamente como referencia comparativa para `src/medir.js` y `RENDIMIENTO.md`.
+- **Justificación (legibilidad vs. recursos):** Aunque `totalCiudadCadena` expresa cada transformación como una tubería declarativa, `totalCiudadUnaPasada` usa un `for...of` con un `if` simple que sigue siendo totalmente claro y legible para cualquier desarrollador del equipo. A cambio, reduce la memoria adicional de **`O(n)` (`3` arreglos nuevos + `n` objetos temporales) a `O(1)` (`0` arreglos creados)** y ejecuta una sola pasada en menos de la mitad del tiempo (`0,675 ms` frente a `1,781 ms` con `10.000` ventas), protegiendo la memoria limitada del servidor cuando el volumen suba a cientos de miles de transacciones.

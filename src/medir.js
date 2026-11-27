@@ -5,7 +5,9 @@ const {
     totalVendidoOp,
     ventaMayorOp,
     totalPorCiudadOp,
-    clientesRecurrentes
+    clientesRecurrentes,
+    totalCiudadCadena,
+    totalCiudadUnaPasada
 } = require("./analitica");
 
 // --- MiniReto 5: Conteo de operaciones ---
@@ -61,4 +63,36 @@ for (const n of tamanosTiempo) {
 // console.time("clientesRecurrentes (n = 100000)");
 // clientesRecurrentes(ventasCienMil);
 // console.timeEnd("clientesRecurrentes (n = 100000)");
+
+// --- MiniReto 7: Comparación de cadena de métodos vs una sola pasada ---
+console.log("\n=== MiniReto 7: totalCiudadCadena vs totalCiudadUnaPasada (n = 10000) ===");
+const ventasDiezMil = generarVentas(10000);
+
+console.time("totalCiudadCadena (n = 10000)");
+const resultadoCadena = totalCiudadCadena(ventasDiezMil, "Medellín");
+console.timeEnd("totalCiudadCadena (n = 10000)");
+
+console.time("totalCiudadUnaPasada (n = 10000)");
+const resultadoUnaPasada = totalCiudadUnaPasada(ventasDiezMil, "Medellín");
+console.timeEnd("totalCiudadUnaPasada (n = 10000)");
+
+if (resultadoCadena === resultadoUnaPasada) {
+    console.log("[OK] Ambas versiones devuelven exactamente el mismo valor:", resultadoCadena);
+} else {
+    console.log("[DIFERENTE] Cadena:", resultadoCadena, "| Una pasada:", resultadoUnaPasada);
+}
+console.time("totalCiudadCadena (n = 10000)");
+const resultadoCadena = totalCiudadCadena(ventasDiezMil, "Medellín");
+console.timeEnd("totalCiudadCadena (n = 10000)");
+
+console.time("totalCiudadUnaPasada (n = 10000)");
+const resultadoUnaPasada = totalCiudadUnaPasada(ventasDiezMil, "Medellín");
+console.timeEnd("totalCiudadUnaPasada (n = 10000)");
+
+if (resultadoCadena === resultadoUnaPasada) {
+    console.log("[OK] Ambas versiones devuelven exactamente el mismo valor:", resultadoCadena);
+} else {
+    console.log("[DIFERENTE] Cadena:", resultadoCadena, "| Una pasada:", resultadoUnaPasada);
+}
+
 
