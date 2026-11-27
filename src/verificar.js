@@ -1,5 +1,6 @@
 const ventas = require("./datos");
 const generarVentas = require("./generador");
+const catalogo = require("./catalogo");
 const {
     totalVendido,
     totalVendidoM,
@@ -18,7 +19,11 @@ const {
     topProductosPorValor,
     clientesRecurrentes,
     clientesRecurrentesSet,
-    clientesRecurrentesMap
+    clientesRecurrentesMap,
+    comboRegaloBruto,
+    comboRegalo,
+    productoEstrellaPorCiudad,
+    primerClienteUnico
 } = require("./analitica");
 
 function verificarIgualdad(nombre, esperado, obtenido) {
@@ -80,3 +85,14 @@ const map5000 = [...clientesRecurrentesMap(ventasCincoMil)].sort();
 verificarIgualdad("clientesRecurrentes n=5000 (Original vs Set)", orig5000, set5000);
 verificarIgualdad("clientesRecurrentes n=5000 (Original vs Map)", orig5000, map5000);
 verificarIgualdad("clientesRecurrentes arreglo vacío []", clientesRecurrentesSet([]), []);
+
+console.log("\n--- MiniReto 10: Combos de regalo y frecuencias ---");
+verificarIgualdad("comboRegalo 87.000 (Bruto vs Map)", comboRegaloBruto(catalogo, 87000), comboRegalo(catalogo, 87000));
+verificarIgualdad("comboRegalo 61.000 (Bruto vs Map)", comboRegaloBruto(catalogo, 61000), comboRegalo(catalogo, 61000));
+verificarIgualdad("comboRegalo 50.000 sin solución", comboRegalo(catalogo, 50000), null);
+console.log("Combo sugerido $87.000:", comboRegalo(catalogo, 87000));
+console.log("Combo sugerido $61.000:", comboRegalo(catalogo, 61000));
+console.log("Producto estrella por ciudad (Día 1):", productoEstrellaPorCiudad(ventas));
+verificarIgualdad("primerClienteUnico (Día 1 === C04)", primerClienteUnico(ventas), "C04");
+verificarIgualdad("primerClienteUnico arreglo vacío []", primerClienteUnico([]), null);
+

@@ -436,3 +436,44 @@ Tomando como base la medición estable de `n = 16.000` (`864,605 ms ≈ 0,865 s`
 ### 3. Intercambio entre tiempo y memoria (*time–space trade-off*)
 - Para bajar el tiempo de **`O(n²)`** a **`O(n)`**, la nueva solución asume un costo explícito de memoria adicional **`O(n)`** (más exactamente `O(u)`, donde `u` es el número de clientes distintos, que con el generador es `≈ n / 3`).
 - En `clientesRecurrentesSet`, `vistos` llega a guardar todos los clientes únicos y `recurrentes` guarda los repetidos; en `comprasPorCliente`, el `Map` almacena una entrada `[cliente, conteo]` por cada cliente único. Ese espacio extra de unos pocos megabytes para `100.000` ventas es un intercambio completamente favorable porque evita bloquear el servidor durante `43` segundos (o más de una hora con un millón de ventas).
+
+## MiniReto 10: Combos de regalo y conteo de frecuencias (`src/catalogo.js` y `Map`)
+
+### 1. Catálogo de campaña y problema del combo exacto (`comboRegaloBruto` vs `comboRegalo`)
+- Se creó `src/catalogo.js` exportando los `8` productos oficiales de la campaña con sus precios (`{ producto, precio }`).
+- **Versión por fuerza bruta (`comboRegaloBruto`):** Usa dos ciclos `for` anidados (`i` y `j = i + 1`) probando todas las parejas posibles hasta encontrar `catalogo[i].precio + catalogo[j].precio === valor` (o retornar `null`). Su complejidad temporal es **`O(n²)`** (con `n` igual al tamaño del catálogo) y espacial **`O(1)`**.
+- **Versión optimizada con complemento (`comboRegalo`):** Recorre el catálogo **una sola vez** usando un `Map` (`vistosPorPrecio`). En cada producto calcula `complemento = valor - item.precio`:
+  - Primero verifica `vistosPorPrecio.has(complemento)`: si ya apareció antes, retorna el par `[productoAnterior, item]`.
+  - Si no apareció, guarda `vistosPorPrecio.set(item.precio, item)` **después** del condicional `if` para garantizar que siempre se combinen dos productos distintos y nunca un producto consigo mismo.
+- **Pruebas realizadas (`src/verificar.js`):**
+  - `valor = 87000` → `[{ producto: "Origen Huila 500 g", precio: 42000 }, { producto: "Origen Sierra 500 g", precio: 45000 }]` (`42.000 + 45.000 = 87.000`).
+  - `valor = 61000` → `[{ producto: "Origen Nariño 250 g", precio: 26000 }, { producto: "Taza de cerámica", precio: 35000 }]` (`26.000 + 35.000 = 61.000`).
+  - `valor = 50000` (sin combinación posible) → `null`.
+
+### 2. Traza manual de `comboRegalo(catalogo, 87000)`
+
+| Paso | `item.producto` | `item.precio` | `complemento` (`87000 - precio`) | ¿`vistosPorPrecio.has(complemento)`? | Estado de `vistosPorPrecio` al final del paso | Retorno |
+| :---: | :--- | ---: | ---: | :---: | :--- | :--- |
+| `1` | `Origen Nariño 250 g` | `26000` | `61000` | No | `{ 26000 => "Origen Nariño 250 g" }` | Continúa |
+| `2` | `Origen Huila 500 g` | `42000` | `45000` | No | `{ 26000 => "Origen Nariño 250 g", 42000 => "Origen Huila 500 g" }` | Continúa |
+| `3` | `Origen Sierra 500 g` | `45000` | `42000` | **Sí** (`"Origen Huila 500 g"`) | *(retorna de inmediato en el paso 3 sin recorrer los 5 restantes)* | **`[Huila 500 g, Sierra 500 g]`** |
+
+### 3. Producto estrella por ciudad (`productoEstrellaPorCiudad`) y regla de desempate
+- Se construyó un `Map` principal `frecuenciasPorCiudad` donde cada clave es la ciudad limpia con `nombreCiudad(venta.ciudad)` y cada valor es otro `Map` interno que cuenta las apariciones de cada `venta.producto`.
+- **Regla de desempate definida:** Al recorrer los conteos de cada ciudad se utiliza la comparación estricta `if (apariciones > maxApariciones)`. Así, cuando dos o más productos empatan en el máximo de apariciones dentro de una ciudad, **se conserva el primer producto que alcanzó esa frecuencia máxima en el orden cronológico del historial de ventas**.
+  - En las `12` ventas del Día 1: `Medellín` → `"Origen Huila 500 g"` (`2`), `Bogotá` → `"Origen Nariño 250 g"` (`3`), `Pereira` → `"Origen Huila 500 g"` (`1`) y `Cali` (triple empate con `1` aparición cada uno) → `"Prensa francesa"` por ser la primera venta registrada en Cali (`id: 3`).
+
+### 4. Primer cliente único para cupón (`primerClienteUnico`)
+- Se resolvió con **dos recorridos secuenciales y un `Map`** (`conteo`):
+  1. Primer `for...of`: cuenta el total de compras de cada cliente en todo el historial.
+  2. Segundo `for...of`: vuelve a recorrer `ventas` en su orden original y retorna el primer `venta.cliente` cuyo `conteo.get(cliente) === 1` (o `null` si todos repitieron o el arreglo está vacío).
+- Con los `12` datos del Día 1 devuelve exactamente **`"C04"`** (venta `id: 5`, ya que `C01`, `C02` y `C03` compraron más de una vez).
+
+### 5. Clasificación de complejidad de las funciones del MiniReto 10
+
+| Función | Complejidad temporal | Complejidad espacial | Justificación |
+| :--- | :---: | :---: | :--- |
+| `comboRegaloBruto(catalogo, valor)` | `O(n²)` | `O(1)` | Doble ciclo anidado que evalúa hasta `n × (n - 1) / 2` pares sin estructuras adicionales (`n` = productos del catálogo). |
+| `comboRegalo(catalogo, valor)` | **`O(n)`** | **`O(n)`** | Un único recorrido sobre el catálogo con consultas e inserciones `O(1)` en el `Map` de precios vistos (guarda hasta `n` entradas). |
+| `productoEstrellaPorCiudad(ventas)` | **`O(n)`** | **`O(c · p)` ≤ `O(n)`** | Un recorrido de `n` ventas actualizando mapas en `O(1)`, seguido de la revisión de los pares `(ciudad, producto)` únicos registrados (como máximo `n`). |
+| `primerClienteUnico(ventas)` | **`O(n)`** | **`O(n)`** | Dos recorridos secuenciales independientes (`O(2n) = O(n)`) y un `Map` que almacena hasta `n` clientes únicos. |
