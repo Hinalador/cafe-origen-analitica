@@ -1,6 +1,6 @@
-# ☕ Café Origen — Analítica de Ventas (`v0.1`)
+# ☕ Café Origen — Analítica de Ventas (`v0.2`)
 
-Sistema de análisis y generación de reportes en **JavaScript (Node.js)** para procesar registros de ventas de **Café Origen**. El proyecto explora la manipulación de arreglos de objetos, limpieza y normalización de datos, cálculo de métricas comerciales (tanto con ciclos imperativos `for...of` como con métodos declarativos `map`, `filter`, `reduce`, `sort`, `slice`) y manejo seguro de casos borde.
+Sistema de análisis, generación de reportes y evaluación de rendimiento en **JavaScript (Node.js)** para procesar registros de ventas de **Café Origen**. El proyecto explora la manipulación de arreglos de objetos, limpieza y normalización de datos, cálculo de métricas comerciales (con ciclos `for...of` y con métodos `map`, `filter`, `reduce`, `sort`, `slice`), manejo seguro de casos borde y análisis empírico y teórico de complejidad **Big O** en tiempo y memoria.
 
 ### ❓ Preguntas de Negocio que Responde el Motor
 1. **¿Cuánto se vendió en total y cuántas unidades salieron?** (`totalVendido`, `unidadesVendidas`)
@@ -17,12 +17,15 @@ Sistema de análisis y generación de reportes en **JavaScript (Node.js)** para 
 ```text
 cafe-origen-analitica/
 ├── README.md           # Documentación general del proyecto
-├── bitacora.md         # Registro de hallazgos, diccionario de datos y errores depurados
+├── RENDIMIENTO.md      # Informe de complejidad Big O, proyecciones, riesgos y plan de optimización
+├── bitacora.md         # Registro de hallazgos, trazas, mediciones y errores depurados
 └── src/
     ├── datos.js        # Dataset base con los registros de ventas de Café Origen
     ├── analitica.js    # Módulo principal con las funciones de limpieza, métricas y agrupaciones
+    ├── generador.js    # Generador de historiales sintéticos de n ventas para pruebas de escala
     ├── explorar.js     # Script de exploración inicial y pruebas rápidas por consola
     ├── verificar.js    # Script de validación entre implementaciones (for...of vs métodos de Array) y casos borde
+    ├── medir.js        # Conteo de operaciones y medición de tiempos de ejecución (Big O)
     └── reporte.js      # Generador del reporte analítico formateado en consola (COP)
 ```
 
@@ -91,6 +94,12 @@ node src/verificar.js
 Genera el informe ejecutivo **CAFÉ ORIGEN — REPORTE ANALÍTICO v0.1** con formato de moneda colombiana (COP), desglose por ciudad, unidades por producto, Top 3 productos y una simulación de un día sin ventas:
 ```bash
 node src/reporte.js
+```
+
+### 4. Medición de operaciones y tiempos (`v0.2`)
+Ejecuta el conteo de operaciones (`100` a `100.000` ventas), los tiempos reales de `clientesRecurrentes` (`1.000` a `16.000`) y la comparación `totalCiudadCadena` vs `totalCiudadUnaPasada`:
+```bash
+node src/medir.js
 ```
 
 ---

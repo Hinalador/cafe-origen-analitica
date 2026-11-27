@@ -81,18 +81,4 @@ if (resultadoCadena === resultadoUnaPasada) {
 } else {
     console.log("[DIFERENTE] Cadena:", resultadoCadena, "| Una pasada:", resultadoUnaPasada);
 }
-console.time("totalCiudadCadena (n = 10000)");
-const resultadoCadena = totalCiudadCadena(ventasDiezMil, "Medellín");
-console.timeEnd("totalCiudadCadena (n = 10000)");
-
-console.time("totalCiudadUnaPasada (n = 10000)");
-const resultadoUnaPasada = totalCiudadUnaPasada(ventasDiezMil, "Medellín");
-console.timeEnd("totalCiudadUnaPasada (n = 10000)");
-
-if (resultadoCadena === resultadoUnaPasada) {
-    console.log("[OK] Ambas versiones devuelven exactamente el mismo valor:", resultadoCadena);
-} else {
-    console.log("[DIFERENTE] Cadena:", resultadoCadena, "| Una pasada:", resultadoUnaPasada);
-}
-
 

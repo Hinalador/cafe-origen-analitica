@@ -377,3 +377,23 @@ Tomando como base la medición estable de `n = 16.000` (`864,605 ms ≈ 0,865 s`
 ### 5. Decisión técnica: ¿cuál versión de `totalCiudad` elegir para el motor?
 - **Decisión:** Se elige **`totalCiudadUnaPasada`** (misma estrategia de recorrido único que `ventasPorCiudad`) como la versión principal para producción en el servidor del marketplace, dejando `totalCiudadCadena` exportada únicamente como referencia comparativa para `src/medir.js` y `RENDIMIENTO.md`.
 - **Justificación (legibilidad vs. recursos):** Aunque `totalCiudadCadena` expresa cada transformación como una tubería declarativa, `totalCiudadUnaPasada` usa un `for...of` con un `if` simple que sigue siendo totalmente claro y legible para cualquier desarrollador del equipo. A cambio, reduce la memoria adicional de **`O(n)` (`3` arreglos nuevos + `n` objetos temporales) a `O(1)` (`0` arreglos creados)** y ejecuta una sola pasada en menos de la mitad del tiempo (`0,675 ms` frente a `1,781 ms` con `10.000` ventas), protegiendo la memoria limitada del servidor cuando el volumen suba a cientos de miles de transacciones.
+
+## MiniReto 8: Analítica `v0.2` — El informe de rendimiento (`RENDIMIENTO.md`)
+
+### 1. Medición integral del motor (`n = 10.000`) y creación de `RENDIMIENTO.md`
+- Se corrigió una duplicación accidental de líneas al final de `src/medir.js` para asegurar que el script se ejecute limpio de principio a fin.
+- Se midieron todas las funciones de `src/analitica.js` con una muestra uniforme de `10.000` ventas generadas y se documentó en la raíz del proyecto el archivo `RENDIMIENTO.md` incluyendo:
+  1. **Tabla maestra de complejidades:** Función, propósito, complejidad temporal, complejidad espacial, justificación directa desde el código y operaciones/tiempo medido en `n = 10.000`.
+  2. **Proyección a `1.000.000` de ventas:** Calculada multiplicando por `1` (`O(1)`), por `100` (`O(n)`, quedando todas por debajo de `0,25 s`) y por `10.000` (`O(n²)` en `clientesRecurrentes`, pasando de `316,84 ms` en `10.000` y `43,57 s` en `100.000` a entre **`53` y `73 minutos`** en `1.000.000`).
+  3. **Priorización de riesgos:** Ordenados de mayor a menor impacto (`clientesRecurrentes` en primer lugar crítico, seguido de cadenas con arreglos intermedios `O(n)` en RAM, agrupaciones/filtros dependientes de cardinalidad, ciclos simples `O(1)` en espacio y utilidades `O(1)`).
+  4. **Plan de optimización sin implementar:** Identificación de los dos trabajos repetidos en `clientesRecurrentes` (comparar pares con doble ciclo `for` y buscar linealmente con `.includes()`) y diseño conceptual para resolverlo en un único recorrido `O(n)` recordando en memoria los clientes ya vistos o su conteo de compras.
+
+### 2. Revisión de un compañero y respuesta técnica
+- **Observación recibida del compañero:**
+  > *"Estuve revisando tu tabla en `RENDIMIENTO.md` y vi que en `topProductosPorValor` el tiempo para `1.000.000` de ventas lo proyectaste casi lineal (`< 0,25 s`), pero esa función usa `.sort()` adentro y en la sesión vimos que ordenar tiene complejidad `O(n log n)`, no `O(n)`. ¿No debería estar clasificada como `O(n log n)` y crecer más rápido que las lineales?"*
+- **Respuesta y ajuste aplicado:**
+  - Muy buena observación. Revisando línea por línea `topProductosPorValor` en `src/analitica.js`, la clave está en **qué arreglo recibe `.sort()`**: la función **no ordena las `n` ventas**, sino que primero recorre las `n` ventas con `.reduce()` en tiempo `O(n)` para agruparlas por nombre de producto, y después aplica `.sort()` únicamente sobre `copiaPares` (`Object.entries(totalesPorProducto)`), cuyo tamaño es `p` (la cantidad de productos distintos, que en Café Origen son `5` referencias fijas, no `1.000.000`).
+  - Por lo tanto, la complejidad exacta se expresa con dos variables como **`O(n + p log p)`**:
+    - Con un catálogo comercial fijo y pequeño (`p = 5`), `p log p` es constante y domina el recorrido lineal **`O(n)`**.
+    - En cambio, en el peor caso teórico general donde cada venta correspondiera a un producto completamente distinto (`p = n`), sí pasaría a costar **`O(n log n)`** en tiempo y **`O(n)`** en memoria.
+  - A raíz de esta observación, se dejó explícita la expresión `O(n + p log p)` (distinguiendo el caso de catálogo fijo frente al peor caso `p = n`) tanto en la tabla principal como en la sección de **Riesgos** de `RENDIMIENTO.md`.
